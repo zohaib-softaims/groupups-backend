@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { updateUserEmailVerificationStatus, createBlacklistedToken } from "./services.js";
 import { getUserByEmail, updateUserById } from "../../shared/services.js";
-import { userDto } from "../../shared/dtos/shared.userDto.js";
+import { userDto } from "../../shared/dtos/userDto.js";
 import { sendMail } from "../../utils/email.utils.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import createError from "http-errors";
@@ -15,7 +15,6 @@ export const updateEmail = catchAsync(async (req, res, next) => {
   if (existingUser) {
     return next(createError(409, "This email already exists"));
   }
-
   const tokenPlain = `${email}-${Date.now()}`;
   const verificationToken = await bcrypt.hash(tokenPlain, 10);
   const verificationTokenExpiry = new Date(Date.now() + 3600000); // 1 hour expiry
@@ -110,7 +109,6 @@ export const loginUser = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(createError(404, "User not found"));
   }
-  console.log("user is", user);
   if (!user.verifyEmail) {
     if (!user.verificationTokenExpiry || user.verificationTokenExpiry <= Date.now()) {
       const tokenPlain = `${email}-${Date.now()}`;
