@@ -9,11 +9,13 @@ import swaggerJSDoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import { swaggerOptions } from "./utils/swagger.config.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
+import userAuthRoutes from "./features/Authentication/routes.js";
+import connectDB from "./utils/dbConnection.js";
 
 configDotenv();
+connectDB();
 
 export const app = express();
-
 app.use(
   cors({
     origin: ["http://localhost:5173"],
@@ -60,5 +62,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.get("/", (req, res) => {
   res.json({ message: "Server is running successfully!" });
 });
+
+app.use("/api/v0", userAuthRoutes);
 
 app.use(errorHandler);
