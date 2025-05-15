@@ -9,6 +9,7 @@ import { resetPasswordValidator } from "./validators/resetPasswordValidator.js";
 import { emailValidator } from "./validators/emailValidator.js";
 import { authMiddleware } from "../../middlewares/authMiddleware.js";
 import { authorizeMiddleware } from "../../middlewares/authorizeMiddleware.js";
+import { getMe } from "./controllers.js";
 
 router.patch("/update-email", authMiddleware, authorizeMiddleware("admin"), validate(emailValidator), updateEmail);
 router.post("/verify-email", validate(emailVerificationValidator), verifyEmail);
@@ -16,6 +17,7 @@ router.post("/resend-verification-email", validate(emailValidator), resendVerifi
 router.post("/login", validate(loginValidator), loginUser);
 router.post("/forgot-password", validate(emailValidator), forgotPassword);
 router.post("/reset-password", validate(resetPasswordValidator), resetPassword);
+router.get("/get-me", authMiddleware, getMe);
 router.post("/logout", logoutUser);
 
 export default router;
