@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { updateUserEmailVerificationStatus, createBlacklistedToken } from "./services.js";
-import { getUserByEmail, updateUserById } from "../../shared/services.js";
+import { getUserByEmail, getUserById, updateUserById } from "../../shared/services.js";
 import { userDto } from "../../shared/dtos/userDto.js";
 import { sendMail } from "../../utils/email.utils.js";
 import { catchAsync } from "../../utils/catchAsync.js";
@@ -180,9 +180,9 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   user.resetPasswordExpiry = resetPasswordExpiry;
   await user.save();
 
-  const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${encodeURIComponent(resetPasswordToken)}&email=${encodeURIComponent(
-    email
-  )}`;
+  const resetUrl = `${process.env.CLIENT_URL}/admin/reset-password?token=${encodeURIComponent(
+    resetPasswordToken
+  )}&email=${encodeURIComponent(email)}`;
 
   // Send the reset email
   await sendMail(email, "Password Reset Request", resetUrl);
@@ -217,6 +217,16 @@ export const resetPassword = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Password reset successfully.",
+  });
+});
+
+export const getMe = catchAsync(async (req, res) => {
+  const { _id } = req.user;
+  const user = await getUserById(_id);
+  return res.status(200).json({
+    success: true,
+    message: "User profile fetched successfully",
+    data: userDto(user),
   });
 });
 
