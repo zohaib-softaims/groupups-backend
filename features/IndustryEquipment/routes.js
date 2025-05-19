@@ -29,13 +29,21 @@ router.post(
   authMiddleware,
   authorizeMiddleware("admin"),
   upload.single("industry_image"),
-  validateIndustryImage,
+  validateIndustryImage("add"),
   validate(createIndustryValidator),
   createIndustryController
 );
 router.get("/industries", authMiddleware, authorizeMiddleware("admin"), getIndustriesController);
 router.get("/industries/:id", authMiddleware, authorizeMiddleware("admin"), getIndustryByIdController);
-router.patch("/industries/:id", authMiddleware, authorizeMiddleware("admin"), validate(updateIndustryValidator), updateIndustryController);
+router.patch(
+  "/industries/:id",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  upload.single("industry_image"),
+  validateIndustryImage("update"),
+  validate(updateIndustryValidator),
+  updateIndustryController
+);
 router.delete("/industries/:id", authMiddleware, authorizeMiddleware("admin"), deleteIndustryController);
 
 // Equipment Routes

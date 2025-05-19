@@ -84,8 +84,23 @@ export const updateIndustryController = catchAsync(async (req, res, next) => {
       return next(createError(409, "Industry with this name already exists"));
     }
   }
+  let imageUrl;
+  if (req.file) {
+    const uploadResult = await s3Uploader(req.file);
+    if (!uploadResult.success) {
+      return next(createError(500, `Error uploading industry_image: ${uploadResult.error}`));
+    }
+    imageUrl = uploadResult.url;
+  }
+  const updateData = {
+    ...req.body,
+  };
 
-  const industry = await findIndustryByIdAndUpdate(id, req.body);
+  if (imageUrl) {
+    updateData.industry_image = imageUrl;
+  }
+
+  const industry = await findIndustryByIdAndUpdate(id, updateData);
   if (!industry) {
     return next(createError(404, "Industry not found"));
   }
