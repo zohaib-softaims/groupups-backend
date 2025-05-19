@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const EquipmentSchema = new mongoose.Schema(
+const IndustrySchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -12,13 +12,12 @@ const EquipmentSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    industry_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Industry",
+    industry_image: {
+      type: String,
       required: true,
     },
   },
   { timestamps: true }
 );
 
-export const Equipment = mongoose.model("Equipment", EquipmentSchema);
+export const Industry = mongoose.model("Industry", IndustrySchema);
