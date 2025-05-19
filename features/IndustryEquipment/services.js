@@ -56,11 +56,11 @@ export const findEquipmentByName = async (name) => {
 };
 
 export const findEquipmentById = async (id) => {
-  return await Equipment.findById(id).populate("industry", "name");
+  return await Equipment.findById(id);
 };
 
 export const findEquipmentByIdAndUpdate = async (id, updateData) => {
-  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate("industry", "name");
+  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 };
 
 export const findEquipmentByIdAndDelete = async (id) => {
