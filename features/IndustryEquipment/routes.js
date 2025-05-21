@@ -14,6 +14,7 @@ import {
   deleteEquipmentController,
   getAdminIndustriesController,
   getVisibleIndustriesController,
+  getEquipmentByIndustryAndNameController,
 } from "./controllers.js";
 
 import { createIndustryValidator, updateIndustryValidator } from "./validators/industryValidator.js";
@@ -70,5 +71,7 @@ router.patch(
   updateEquipmentController
 );
 router.delete("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), deleteEquipmentController);
+
+router.get("/equipment", getEquipmentByIndustryAndNameController);
 
 export default router;

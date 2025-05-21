@@ -16,6 +16,7 @@ import {
   findAllEquipments,
   findVisibleIndustries,
   findVisibleEquipments,
+  findEquipmentByIndustryAndName,
 } from "./services.js";
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
@@ -56,7 +57,7 @@ export const createIndustryController = catchAsync(async (req, res, next) => {
 
 export const getAdminIndustriesController = catchAsync(async (req, res) => {
   const industries = await findAllIndustries();
-  
+
   return res.status(200).json({
     success: true,
     message: "All industries fetched successfully",
@@ -66,7 +67,7 @@ export const getAdminIndustriesController = catchAsync(async (req, res) => {
 
 export const getVisibleIndustriesController = catchAsync(async (req, res) => {
   const industries = await findVisibleIndustries();
-  
+
   return res.status(200).json({
     success: true,
     message: "Visible industries fetched successfully",
@@ -177,12 +178,10 @@ export const getAdminEquipmentsController = catchAsync(async (req, res) => {
 export const getVisibleEquipmentsController = catchAsync(async (req, res) => {
   const { industry } = req.query;
   const equipments = await findVisibleEquipments(industry);
-  
+
   return res.status(200).json({
     success: true,
-    message: industry 
-      ? `Equipments for industry '${industry}' fetched successfully`
-      : "All visible equipments fetched successfully",
+    message: industry ? `Equipments for industry '${industry}' fetched successfully` : "All visible equipments fetched successfully",
     data: equipmentsDto(equipments),
   });
 });
@@ -239,5 +238,18 @@ export const deleteEquipmentController = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Equipment deleted successfully",
+  });
+});
+
+export const getEquipmentByIndustryAndNameController = catchAsync(async (req, res, next) => {
+  const { industry, equipment } = req.query;
+  if (!industry || !equipment) {
+    return next(createError(400, "Both industry and equipment names are required"));
+  }
+  const equipmentData = await findEquipmentByIndustryAndName(industry, equipment);
+  return res.status(200).json({
+    success: true,
+    message: "Equipment found successfully",
+    data: equipmentDto(equipmentData),
   });
 });

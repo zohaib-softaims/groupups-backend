@@ -91,3 +91,28 @@ export const findVisibleEquipments = async (industryName = null) => {
 
   return await Equipment.find(query).sort({ createdAt: -1 });
 };
+
+export const findEquipmentByIndustryAndName = async (industryName, equipmentName) => {
+  // First find the industry
+  const industry = await Industry.findOne({
+    name: { $regex: `^${industryName.trim()}$`, $options: "i" },
+    visibility: true
+  });
+
+  if (!industry) {
+    throw new Error("Industry not found");
+  }
+
+  // Then find the equipment under that industry
+  const equipment = await Equipment.findOne({
+    name: { $regex: `^${equipmentName.trim()}$`, $options: "i" },
+    industry_id: industry._id,
+    visibility: true
+  });
+
+  if (!equipment) {
+    throw new Error("Equipment not found in this industry");
+  }
+
+  return equipment;
+};
