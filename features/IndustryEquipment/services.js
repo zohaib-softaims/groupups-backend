@@ -34,6 +34,10 @@ export const findAllIndustries = async (query = {}) => {
   return await Industry.find(query).sort({ createdAt: -1 });
 };
 
+export const findVisibleIndustries = async () => {
+  return await Industry.find({ visibility: true }).sort({ createdAt: -1 });
+};
+
 export const countEquipmentsByIndustry = async (industryId) => {
   return await Equipment.countDocuments({ industry: industryId });
 };

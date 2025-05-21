@@ -3,7 +3,6 @@ const router = express.Router();
 
 import {
   createIndustryController,
-  getIndustriesController,
   getIndustryByIdController,
   updateIndustryController,
   deleteIndustryController,
@@ -12,6 +11,8 @@ import {
   getEquipmentByIdController,
   updateEquipmentController,
   deleteEquipmentController,
+  getAdminIndustriesController,
+  getVisibleIndustriesController,
 } from "./controllers.js";
 
 import { createIndustryValidator, updateIndustryValidator } from "./validators/industryValidator.js";
@@ -33,7 +34,8 @@ router.post(
   validate(createIndustryValidator),
   createIndustryController
 );
-router.get("/industries", authMiddleware, authorizeMiddleware("admin"), getIndustriesController);
+router.get("/admin/industries", authMiddleware, authorizeMiddleware("admin"), getAdminIndustriesController);
+router.get("/industries", authMiddleware, getVisibleIndustriesController);
 router.get("/industries/:id", authMiddleware, authorizeMiddleware("admin"), getIndustryByIdController);
 router.patch(
   "/industries/:id",

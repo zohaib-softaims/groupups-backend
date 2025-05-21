@@ -14,6 +14,7 @@ import {
   findEquipmentByIdAndUpdate,
   findEquipmentByIdAndDelete,
   findAllEquipments,
+  findVisibleIndustries,
 } from "./services.js";
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
@@ -52,11 +53,22 @@ export const createIndustryController = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getIndustriesController = catchAsync(async (req, res) => {
+export const getAdminIndustriesController = catchAsync(async (req, res) => {
   const industries = await findAllIndustries();
+  
   return res.status(200).json({
     success: true,
-    message: "Industries fetched successfully",
+    message: "All industries fetched successfully",
+    data: industriesDto(industries),
+  });
+});
+
+export const getVisibleIndustriesController = catchAsync(async (req, res) => {
+  const industries = await findVisibleIndustries();
+  
+  return res.status(200).json({
+    success: true,
+    message: "Visible industries fetched successfully",
     data: industriesDto(industries),
   });
 });
