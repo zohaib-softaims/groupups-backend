@@ -7,7 +7,8 @@ import {
   updateIndustryController,
   deleteIndustryController,
   createEquipmentController,
-  getEquipmentsController,
+  getAdminEquipmentsController,
+  getVisibleEquipmentsController,
   getEquipmentByIdController,
   updateEquipmentController,
   deleteEquipmentController,
@@ -56,7 +57,10 @@ router.post(
   validate(createEquipmentValidator),
   createEquipmentController
 );
-router.get("/equipments", authMiddleware, authorizeMiddleware("admin"), getEquipmentsController);
+
+router.get("/admin/equipments", authMiddleware, authorizeMiddleware("admin"), getAdminEquipmentsController);
+router.get("/equipments", getVisibleEquipmentsController);
+
 router.get("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), getEquipmentByIdController);
 router.patch(
   "/equipments/:id",
@@ -65,7 +69,6 @@ router.patch(
   validate(updateEquipmentValidator),
   updateEquipmentController
 );
-
 router.delete("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), deleteEquipmentController);
 
 export default router;

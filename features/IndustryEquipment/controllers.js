@@ -15,6 +15,7 @@ import {
   findEquipmentByIdAndDelete,
   findAllEquipments,
   findVisibleIndustries,
+  findVisibleEquipments,
 } from "./services.js";
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
@@ -164,11 +165,24 @@ export const createEquipmentController = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getEquipmentsController = catchAsync(async (req, res) => {
+export const getAdminEquipmentsController = catchAsync(async (req, res) => {
   const equipments = await findAllEquipments();
   return res.status(200).json({
     success: true,
-    message: "Equipments fetched successfully",
+    message: "All equipments fetched successfully",
+    data: equipmentsDto(equipments),
+  });
+});
+
+export const getVisibleEquipmentsController = catchAsync(async (req, res) => {
+  const { industry } = req.query;
+  const equipments = await findVisibleEquipments(industry);
+  
+  return res.status(200).json({
+    success: true,
+    message: industry 
+      ? `Equipments for industry '${industry}' fetched successfully`
+      : "All visible equipments fetched successfully",
     data: equipmentsDto(equipments),
   });
 });

@@ -71,6 +71,23 @@ export const findEquipmentByIdAndDelete = async (id) => {
   return await Equipment.findByIdAndDelete(id);
 };
 
-export const findAllEquipments = async (query = {}) => {
+export const findAllEquipments = async () => {
+  return await Equipment.find().sort({ createdAt: -1 });
+};
+
+export const findVisibleEquipments = async (industryName = null) => {
+  const query = { visibility: true };
+
+  if (industryName) {
+    const industry = await Industry.findOne({
+      name: { $regex: `^${industryName.trim()}$`, $options: "i" },
+    });
+    if (industry) {
+      query.industry_id = industry._id;
+    } else {
+      return [];
+    }
+  }
+
   return await Equipment.find(query).sort({ createdAt: -1 });
 };
