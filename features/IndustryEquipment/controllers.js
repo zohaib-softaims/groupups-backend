@@ -14,6 +14,9 @@ import {
   findEquipmentByIdAndUpdate,
   findEquipmentByIdAndDelete,
   findAllEquipments,
+  findVisibleIndustries,
+  findVisibleEquipments,
+  findEquipmentByIndustryAndName,
 } from "./services.js";
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
@@ -52,11 +55,22 @@ export const createIndustryController = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getIndustriesController = catchAsync(async (req, res) => {
+export const getAdminIndustriesController = catchAsync(async (req, res) => {
   const industries = await findAllIndustries();
+
   return res.status(200).json({
     success: true,
-    message: "Industries fetched successfully",
+    message: "All industries fetched successfully",
+    data: industriesDto(industries),
+  });
+});
+
+export const getVisibleIndustriesController = catchAsync(async (req, res) => {
+  const industries = await findVisibleIndustries();
+
+  return res.status(200).json({
+    success: true,
+    message: "Visible industries fetched successfully",
     data: industriesDto(industries),
   });
 });
@@ -84,8 +98,23 @@ export const updateIndustryController = catchAsync(async (req, res, next) => {
       return next(createError(409, "Industry with this name already exists"));
     }
   }
+  let imageUrl;
+  if (req.file) {
+    const uploadResult = await s3Uploader(req.file);
+    if (!uploadResult.success) {
+      return next(createError(500, `Error uploading industry_image: ${uploadResult.error}`));
+    }
+    imageUrl = uploadResult.url;
+  }
+  const updateData = {
+    ...req.body,
+  };
 
-  const industry = await findIndustryByIdAndUpdate(id, req.body);
+  if (imageUrl) {
+    updateData.industry_image = imageUrl;
+  }
+
+  const industry = await findIndustryByIdAndUpdate(id, updateData);
   if (!industry) {
     return next(createError(404, "Industry not found"));
   }
@@ -137,11 +166,22 @@ export const createEquipmentController = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getEquipmentsController = catchAsync(async (req, res) => {
+export const getAdminEquipmentsController = catchAsync(async (req, res) => {
   const equipments = await findAllEquipments();
   return res.status(200).json({
     success: true,
-    message: "Equipments fetched successfully",
+    message: "All equipments fetched successfully",
+    data: equipmentsDto(equipments),
+  });
+});
+
+export const getVisibleEquipmentsController = catchAsync(async (req, res) => {
+  const { industry } = req.query;
+  const equipments = await findVisibleEquipments(industry);
+
+  return res.status(200).json({
+    success: true,
+    message: industry ? `Equipments for industry '${industry}' fetched successfully` : "All visible equipments fetched successfully",
     data: equipmentsDto(equipments),
   });
 });
@@ -198,5 +238,18 @@ export const deleteEquipmentController = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Equipment deleted successfully",
+  });
+});
+
+export const getEquipmentByIndustryAndNameController = catchAsync(async (req, res, next) => {
+  const { industry, equipment } = req.query;
+  if (!industry || !equipment) {
+    return next(createError(400, "Both industry and equipment names are required"));
+  }
+  const equipmentData = await findEquipmentByIndustryAndName(industry, equipment);
+  return res.status(200).json({
+    success: true,
+    message: "Equipment found successfully",
+    data: equipmentDto(equipmentData),
   });
 });

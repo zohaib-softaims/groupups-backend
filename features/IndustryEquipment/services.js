@@ -34,6 +34,10 @@ export const findAllIndustries = async (query = {}) => {
   return await Industry.find(query).sort({ createdAt: -1 });
 };
 
+export const findVisibleIndustries = async () => {
+  return await Industry.find({ visibility: true }).sort({ createdAt: -1 });
+};
+
 export const countEquipmentsByIndustry = async (industryId) => {
   return await Equipment.countDocuments({ industry: industryId });
 };
@@ -56,17 +60,59 @@ export const findEquipmentByName = async (name) => {
 };
 
 export const findEquipmentById = async (id) => {
-  return await Equipment.findById(id).populate("industry", "name");
+  return await Equipment.findById(id);
 };
 
 export const findEquipmentByIdAndUpdate = async (id, updateData) => {
-  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true }).populate("industry", "name");
+  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
 };
 
 export const findEquipmentByIdAndDelete = async (id) => {
   return await Equipment.findByIdAndDelete(id);
 };
 
-export const findAllEquipments = async (query = {}) => {
+export const findAllEquipments = async () => {
+  return await Equipment.find().sort({ createdAt: -1 });
+};
+
+export const findVisibleEquipments = async (industryName = null) => {
+  const query = { visibility: true };
+
+  if (industryName) {
+    const industry = await Industry.findOne({
+      name: { $regex: `^${industryName.trim()}$`, $options: "i" },
+    });
+    if (industry) {
+      query.industry_id = industry._id;
+    } else {
+      return [];
+    }
+  }
+
   return await Equipment.find(query).sort({ createdAt: -1 });
+};
+
+export const findEquipmentByIndustryAndName = async (industryName, equipmentName) => {
+  // First find the industry
+  const industry = await Industry.findOne({
+    name: { $regex: `^${industryName.trim()}$`, $options: "i" },
+    visibility: true
+  });
+
+  if (!industry) {
+    throw new Error("Industry not found");
+  }
+
+  // Then find the equipment under that industry
+  const equipment = await Equipment.findOne({
+    name: { $regex: `^${equipmentName.trim()}$`, $options: "i" },
+    industry_id: industry._id,
+    visibility: true
+  });
+
+  if (!equipment) {
+    throw new Error("Equipment not found in this industry");
+  }
+
+  return equipment;
 };

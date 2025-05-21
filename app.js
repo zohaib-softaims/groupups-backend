@@ -11,6 +11,7 @@ import { swaggerOptions } from "./utils/swagger.config.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import userAuthRoutes from "./features/Authentication/routes.js";
 import industryEquipmentRoutes from "./features/IndustryEquipment/routes.js";
+import questionsRoutes from "./features/questions-management/routes.js";
 import connectDB from "./utils/dbConnection.js";
 
 configDotenv();
@@ -66,5 +67,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/v0", userAuthRoutes);
 app.use("/api/v0/industry-equipment", industryEquipmentRoutes);
+app.use("/api/v0/questions", questionsRoutes);
 
 app.use(errorHandler);

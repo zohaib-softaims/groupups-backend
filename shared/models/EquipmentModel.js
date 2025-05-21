@@ -17,6 +17,12 @@ const EquipmentSchema = new mongoose.Schema(
       ref: "Industry",
       required: true,
     },
+    questions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Question",
+      },
+    ],
   },
   { timestamps: true }
 );

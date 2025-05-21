@@ -3,15 +3,18 @@ const router = express.Router();
 
 import {
   createIndustryController,
-  getIndustriesController,
   getIndustryByIdController,
   updateIndustryController,
   deleteIndustryController,
   createEquipmentController,
-  getEquipmentsController,
+  getAdminEquipmentsController,
+  getVisibleEquipmentsController,
   getEquipmentByIdController,
   updateEquipmentController,
   deleteEquipmentController,
+  getAdminIndustriesController,
+  getVisibleIndustriesController,
+  getEquipmentByIndustryAndNameController,
 } from "./controllers.js";
 
 import { createIndustryValidator, updateIndustryValidator } from "./validators/industryValidator.js";
@@ -29,13 +32,22 @@ router.post(
   authMiddleware,
   authorizeMiddleware("admin"),
   upload.single("industry_image"),
-  validateIndustryImage,
+  validateIndustryImage("add"),
   validate(createIndustryValidator),
   createIndustryController
 );
-router.get("/industries", authMiddleware, authorizeMiddleware("admin"), getIndustriesController);
+router.get("/admin/industries", authMiddleware, authorizeMiddleware("admin"), getAdminIndustriesController);
+router.get("/industries", authMiddleware, getVisibleIndustriesController);
 router.get("/industries/:id", authMiddleware, authorizeMiddleware("admin"), getIndustryByIdController);
-router.patch("/industries/:id", authMiddleware, authorizeMiddleware("admin"), validate(updateIndustryValidator), updateIndustryController);
+router.patch(
+  "/industries/:id",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  upload.single("industry_image"),
+  validateIndustryImage("update"),
+  validate(updateIndustryValidator),
+  updateIndustryController
+);
 router.delete("/industries/:id", authMiddleware, authorizeMiddleware("admin"), deleteIndustryController);
 
 // Equipment Routes
@@ -46,7 +58,10 @@ router.post(
   validate(createEquipmentValidator),
   createEquipmentController
 );
-router.get("/equipments", authMiddleware, authorizeMiddleware("admin"), getEquipmentsController);
+
+router.get("/admin/equipments", authMiddleware, authorizeMiddleware("admin"), getAdminEquipmentsController);
+router.get("/equipments", getVisibleEquipmentsController);
+
 router.get("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), getEquipmentByIdController);
 router.patch(
   "/equipments/:id",
@@ -55,7 +70,8 @@ router.patch(
   validate(updateEquipmentValidator),
   updateEquipmentController
 );
-
 router.delete("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), deleteEquipmentController);
+
+router.get("/equipment", getEquipmentByIndustryAndNameController);
 
 export default router;
