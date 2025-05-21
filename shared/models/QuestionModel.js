@@ -26,28 +26,29 @@ const QuestionSchema = new mongoose.Schema(
       trim: true,
     },
     options: {
-      type: [{
-        name: {
-          type: String,
-          required: true,
-          trim: true,
-        }
-      }],
-      required: function() {
+      type: [
+        {
+          text: {
+            type: String,
+            required: true,
+            trim: true,
+          },
+        },
+      ],
+      required: function () {
         return this.question_type === "multiple_choice";
-      }
+      },
     },
     allowMultipleSelection: {
       type: Boolean,
-      required: function() {
+      required: function () {
         return this.question_type === "multiple_choice";
-      }
-    }
+      },
+    },
   },
-  { 
+  {
     timestamps: true,
   }
 );
-
 
 export const Question = mongoose.model("Question", QuestionSchema);

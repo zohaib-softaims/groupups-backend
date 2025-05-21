@@ -29,9 +29,9 @@ export const createQuestionController = catchAsync(async (req, res, next) => {
 });
 
 export const getQuestionsController = catchAsync(async (req, res) => {
-  const { equipment_id } = req.query;
+  const { equipmentId } = req.query;
 
-  const questions = equipment_id ? await findQuestionsByEquipment(equipment_id) : await findAllQuestions();
+  const questions = equipmentId ? await findQuestionsByEquipment(equipmentId) : await findAllQuestions();
 
   return res.status(200).json({
     success: true,

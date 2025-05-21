@@ -7,7 +7,7 @@ const baseQuestionSchema = z.object({
       required_error: "Equipment ID is required",
     })
     .length(24, {
-      message: "Equipment ID must be a valid 24-character MongoDB ID",
+      message: "Equipment ID must be a valid 24-character valid id",
     }),
 
   question_type: z.enum(["open_ended", "multiple_choice", "statement", "file_upload"], {
@@ -50,12 +50,12 @@ const multipleChoiceSchema = baseQuestionSchema.extend({
   options: z
     .array(
       z.object({
-        name: z
+        text: z
           .string({
-            required_error: "Option name is required",
+            required_error: "Option text is required",
           })
           .trim()
-          .min(1, "Option name cannot be empty"),
+          .min(1, "Option text cannot be empty"),
       }),
       {
         required_error: "Options are required for multiple choice questions",
