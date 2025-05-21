@@ -11,7 +11,11 @@ export const findQuestionById = async (id) => {
 };
 
 export const findQuestionsByEquipment = async (equipmentId) => {
-  return await Question.find({ equipment_id: equipmentId }).sort({ createdAt: -1 });
+  const equipment = await Equipment.findById(equipmentId).select("questions").populate({
+    path: "questions",
+  });
+
+  return equipment?.questions || [];
 };
 
 export const findAllQuestions = async () => {
@@ -28,4 +32,19 @@ export const findQuestionByIdAndDelete = async (id) => {
 
 export const findEquipmentById = async (id) => {
   return await Equipment.findById(id);
+};
+
+export const resetEquipmentQuestions = async (equipmentId, questionIds) => {
+  const equipment = await Equipment.findById(equipmentId);
+  if (!equipment) {
+    throw new Error(404, "Equipment not found");
+  }
+  const questions = await Question.find({ _id: { $in: questionIds } });
+  if (questions.length !== questionIds.length) {
+    throw new Error(400, "One or more question IDs are invalid");
+  }
+  equipment.questions = questionIds;
+  await equipment.save();
+
+  return questions;
 };

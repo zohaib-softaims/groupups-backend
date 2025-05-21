@@ -8,6 +8,7 @@ import {
   findQuestionByIdAndUpdate,
   findQuestionByIdAndDelete,
   findEquipmentById,
+  resetEquipmentQuestions,
 } from "./services.js";
 import { questionDto, questionsDto } from "../../shared/dtos/questionDto.js";
 
@@ -84,5 +85,16 @@ export const deleteQuestionController = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Question deleted successfully",
+  });
+});
+
+export const resetQuestionsController = catchAsync(async (req, res, next) => {
+  const { equipment_id, questions } = req.body;
+
+  await resetEquipmentQuestions(equipment_id, questions);
+
+  return res.status(200).json({
+    success: true,
+    message: "questions ordered successfully",
   });
 });

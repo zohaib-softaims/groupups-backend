@@ -82,3 +82,14 @@ export const updateQuestionValidator = (req, res, next) => {
 
   return validate(schema)(req, res, next);
 };
+
+export const resetQuestionsValidator = z.object({
+  equipment_id: z
+    .string({
+      required_error: "equipment_id is required",
+    })
+    .length(24, {
+      message: "equipment_id must be a valid id",
+    }),
+  questions: z.array(z.string().length(24, "Each question must be a valid id")),
+});
