@@ -74,18 +74,10 @@ export const findAllEquipments = async () => {
   return await Equipment.find().sort({ createdAt: -1 });
 };
 
-export const findVisibleEquipments = async (industryName = null) => {
+export const findVisibleEquipments = async (industryId = null) => {
   const query = { visibility: true };
-
-  if (industryName) {
-    const industry = await Industry.findOne({
-      name: { $regex: `^${industryName.trim()}$`, $options: "i" },
-    });
-    if (industry) {
-      query.industry_id = industry._id;
-    } else {
-      return [];
-    }
+  if (industryId) {
+    query.industry_id = industryId;
   }
 
   return await Equipment.find(query).sort({ createdAt: -1 });

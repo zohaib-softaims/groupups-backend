@@ -203,13 +203,30 @@ export const getAdminEquipmentsController = catchAsync(async (req, res) => {
   });
 });
 
-export const getVisibleEquipmentsController = catchAsync(async (req, res) => {
+export const getVisibleEquipmentsController = catchAsync(async (req, res, next) => {
   const { industry } = req.query;
-  const equipments = await findVisibleEquipments(industry);
+  let industryData = null;
+  let equipments = [];
+
+  if (industry) {
+    industryData = await findIndustryByName(industry);
+    if (!industryData) {
+      return next(createError(404, `Industry with name '${industry}' not found`));
+    }
+    if (!industryData.visibility) {
+      return next(createError(403, `Industry '${industry}' is not visible`));
+    }
+    equipments = await findVisibleEquipments(industryData._id);
+  } else {
+    equipments = await findVisibleEquipments();
+  }
 
   return res.status(200).json({
     success: true,
     message: industry ? `Equipments for industry '${industry}' fetched successfully` : "All visible equipments fetched successfully",
-    data: equipmentsDto(equipments),
+    data: {
+      industry: industryData ? industryDto(industryData) : null,
+      equipments: equipmentsDto(equipments),
+    },
   });
 });
