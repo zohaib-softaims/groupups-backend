@@ -10,14 +10,13 @@ import {
   countEquipmentsByIndustry,
   createEquipment,
   findEquipmentByName,
-  findEquipmentById,
   findEquipmentByIdAndUpdate,
   findEquipmentByIdAndDelete,
   findAllEquipments,
   findVisibleIndustries,
   findVisibleEquipments,
-  findEquipmentByIndustryAndName,
 } from "./services.js";
+
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
 import { s3Uploader } from "../../utils/s3Uploader.js";
@@ -51,39 +50,6 @@ export const createIndustryController = catchAsync(async (req, res, next) => {
   return res.status(201).json({
     success: true,
     message: "Industry created successfully",
-    data: industryDto(industry),
-  });
-});
-
-export const getAdminIndustriesController = catchAsync(async (req, res) => {
-  const industries = await findAllIndustries();
-
-  return res.status(200).json({
-    success: true,
-    message: "All industries fetched successfully",
-    data: industriesDto(industries),
-  });
-});
-
-export const getVisibleIndustriesController = catchAsync(async (req, res) => {
-  const industries = await findVisibleIndustries();
-
-  return res.status(200).json({
-    success: true,
-    message: "Visible industries fetched successfully",
-    data: industriesDto(industries),
-  });
-});
-
-export const getIndustryByIdController = catchAsync(async (req, res, next) => {
-  const industry = await findIndustryById(req.params.id);
-  if (!industry) {
-    return next(createError(404, "Industry not found"));
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: "Industry fetched successfully",
     data: industryDto(industry),
   });
 });
@@ -145,6 +111,26 @@ export const deleteIndustryController = catchAsync(async (req, res, next) => {
   });
 });
 
+export const getAdminIndustriesController = catchAsync(async (req, res) => {
+  const industries = await findAllIndustries();
+
+  return res.status(200).json({
+    success: true,
+    message: "All industries fetched successfully",
+    data: industriesDto(industries),
+  });
+});
+
+export const getVisibleIndustriesController = catchAsync(async (req, res) => {
+  const industries = await findVisibleIndustries();
+
+  return res.status(200).json({
+    success: true,
+    message: "Visible industries fetched successfully",
+    data: industriesDto(industries),
+  });
+});
+
 export const createEquipmentController = catchAsync(async (req, res, next) => {
   const { name, industry_id } = req.body;
 
@@ -162,39 +148,6 @@ export const createEquipmentController = catchAsync(async (req, res, next) => {
   return res.status(201).json({
     success: true,
     message: "Equipment created successfully",
-    data: equipmentDto(equipment),
-  });
-});
-
-export const getAdminEquipmentsController = catchAsync(async (req, res) => {
-  const equipments = await findAllEquipments();
-  return res.status(200).json({
-    success: true,
-    message: "All equipments fetched successfully",
-    data: equipmentsDto(equipments),
-  });
-});
-
-export const getVisibleEquipmentsController = catchAsync(async (req, res) => {
-  const { industry } = req.query;
-  const equipments = await findVisibleEquipments(industry);
-
-  return res.status(200).json({
-    success: true,
-    message: industry ? `Equipments for industry '${industry}' fetched successfully` : "All visible equipments fetched successfully",
-    data: equipmentsDto(equipments),
-  });
-});
-
-export const getEquipmentByIdController = catchAsync(async (req, res, next) => {
-  const equipment = await findEquipmentById(req.params.id);
-  if (!equipment) {
-    return next(createError(404, "Equipment not found"));
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: "Equipment fetched successfully",
     data: equipmentDto(equipment),
   });
 });
@@ -241,15 +194,22 @@ export const deleteEquipmentController = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getEquipmentByIndustryAndNameController = catchAsync(async (req, res, next) => {
-  const { industry, equipment } = req.query;
-  if (!industry || !equipment) {
-    return next(createError(400, "Both industry and equipment names are required"));
-  }
-  const equipmentData = await findEquipmentByIndustryAndName(industry, equipment);
+export const getAdminEquipmentsController = catchAsync(async (req, res) => {
+  const equipments = await findAllEquipments();
   return res.status(200).json({
     success: true,
-    message: "Equipment found successfully",
-    data: equipmentDto(equipmentData),
+    message: "All equipments fetched successfully",
+    data: equipmentsDto(equipments),
+  });
+});
+
+export const getVisibleEquipmentsController = catchAsync(async (req, res) => {
+  const { industry } = req.query;
+  const equipments = await findVisibleEquipments(industry);
+
+  return res.status(200).json({
+    success: true,
+    message: industry ? `Equipments for industry '${industry}' fetched successfully` : "All visible equipments fetched successfully",
+    data: equipmentsDto(equipments),
   });
 });

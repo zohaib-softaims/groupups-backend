@@ -7,6 +7,14 @@ export const createIndustry = async (industryData) => {
   return await industry.save();
 };
 
+export const findIndustryByIdAndUpdate = async (id, updateData) => {
+  return await Industry.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+};
+
+export const findIndustryByIdAndDelete = async (id) => {
+  return await Industry.findByIdAndDelete(id);
+};
+
 export const findIndustryByName = async (name) => {
   const trimmedName = name.trim();
 
@@ -20,14 +28,6 @@ export const findIndustryByName = async (name) => {
 
 export const findIndustryById = async (id) => {
   return await Industry.findById(id);
-};
-
-export const findIndustryByIdAndUpdate = async (id, updateData) => {
-  return await Industry.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
-};
-
-export const findIndustryByIdAndDelete = async (id) => {
-  return await Industry.findByIdAndDelete(id);
 };
 
 export const findAllIndustries = async (query = {}) => {
@@ -47,6 +47,13 @@ export const createEquipment = async (equipmentData) => {
   const equipment = new Equipment(equipmentData);
   return await equipment.save();
 };
+export const findEquipmentByIdAndUpdate = async (id, updateData) => {
+  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+};
+
+export const findEquipmentByIdAndDelete = async (id) => {
+  return await Equipment.findByIdAndDelete(id);
+};
 
 export const findEquipmentByName = async (name) => {
   const trimmedName = name.trim();
@@ -61,14 +68,6 @@ export const findEquipmentByName = async (name) => {
 
 export const findEquipmentById = async (id) => {
   return await Equipment.findById(id);
-};
-
-export const findEquipmentByIdAndUpdate = async (id, updateData) => {
-  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
-};
-
-export const findEquipmentByIdAndDelete = async (id) => {
-  return await Equipment.findByIdAndDelete(id);
 };
 
 export const findAllEquipments = async () => {
@@ -90,29 +89,4 @@ export const findVisibleEquipments = async (industryName = null) => {
   }
 
   return await Equipment.find(query).sort({ createdAt: -1 });
-};
-
-export const findEquipmentByIndustryAndName = async (industryName, equipmentName) => {
-  // First find the industry
-  const industry = await Industry.findOne({
-    name: { $regex: `^${industryName.trim()}$`, $options: "i" },
-    visibility: true
-  });
-
-  if (!industry) {
-    throw new Error("Industry not found");
-  }
-
-  // Then find the equipment under that industry
-  const equipment = await Equipment.findOne({
-    name: { $regex: `^${equipmentName.trim()}$`, $options: "i" },
-    industry_id: industry._id,
-    visibility: true
-  });
-
-  if (!equipment) {
-    throw new Error("Equipment not found in this industry");
-  }
-
-  return equipment;
 };
