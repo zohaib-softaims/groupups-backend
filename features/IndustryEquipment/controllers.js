@@ -254,6 +254,6 @@ export const isEquipmentExistController = catchAsync(async (req, res, next) => {
     success: true,
     exists: true,
     message: `Equipment '${equipment}' exists under industry '${industry}'`,
-    data: equipmentData,
+    data: equipmentDto(equipmentData),
   });
 });

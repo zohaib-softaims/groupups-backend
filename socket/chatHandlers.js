@@ -6,6 +6,7 @@ export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
     try {
       const relevantQuestions = predefinedQuesitons[data.type];
+      console.log("data coming", data);
       const systemPrompt = generateLLMPrompt(relevantQuestions, data.type);
 
       const llmResponse = await getLLMResponse({
