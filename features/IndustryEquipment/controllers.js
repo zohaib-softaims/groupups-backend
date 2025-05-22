@@ -20,7 +20,6 @@ import {
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
 import { s3Uploader } from "../../utils/s3Uploader.js";
-import { date } from "zod";
 
 export const createIndustryController = catchAsync(async (req, res, next) => {
   const { name } = req.body;

@@ -1,26 +1,28 @@
-import { predefinedQuesitons } from "../constants/predefinedQuestions.js";
+import { getLLMQuestionsController } from "../features/Chatbot/controllers.js";
 import { getLLMResponse } from "../lib/llmConfig.js";
 import { generateLLMPrompt } from "../lib/llmPrompt.js";
 
 export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
     try {
-      const relevantQuestions = predefinedQuesitons[data.type];
-      console.log("data coming", data);
-      const systemPrompt = generateLLMPrompt(relevantQuestions, data.type);
-
+      let systemPrompt;
+      if (socket?.systemPrompt) {
+        systemPrompt = socket?.systemPrompt;
+        console.log("using socket questions");
+      } else {
+        console.log("fetched questions");
+        const equipmentDetails = await getLLMQuestionsController(data.type);
+        systemPrompt = generateLLMPrompt(equipmentDetails.name, equipmentDetails.questions);
+        socket.systemPrompt = systemPrompt;
+      }
       const llmResponse = await getLLMResponse({
         systemPrompt,
         messages: data.messages,
       });
-
-      console.log("llm response is", llmResponse);
-      const parsedLLMResponse = JSON.parse(llmResponse);
-
+      console.log("llm response", llmResponse);
       socket.emit("receiveMessage", {
         role: "assistant",
         content: llmResponse,
-        progress: parsedLLMResponse?.progress,
       });
     } catch (error) {
       console.error("LLM processing error:", error);
