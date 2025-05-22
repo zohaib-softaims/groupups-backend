@@ -1,4 +1,4 @@
-import { getLLMQuestionsController } from "../features/Chatbot/controllers.js";
+import { addInteractionController, getLLMQuestionsController } from "../features/Chatbot/controllers.js";
 import { getLLMResponse } from "../lib/llmConfig.js";
 import { generateLLMPrompt } from "../lib/llmPrompt.js";
 
@@ -19,6 +19,11 @@ export const chatHandlers = (io, socket) => {
         systemPrompt,
         messages: data.messages,
       });
+      const parsedLLMResponse = JSON.parse(llmResponse);
+      if (parsedLLMResponse?.content?.finalResponse) {
+        console.log("final", parsedLLMResponse.content.finalResponse);
+        await addInteractionController(parsedLLMResponse.content.finalResponse);
+      }
       console.log("llm response", llmResponse);
       socket.emit("receiveMessage", {
         role: "assistant",
