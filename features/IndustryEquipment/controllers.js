@@ -20,6 +20,7 @@ import {
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
 import { s3Uploader } from "../../utils/s3Uploader.js";
+import { date } from "zod";
 
 export const createIndustryController = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -228,5 +229,31 @@ export const getVisibleEquipmentsController = catchAsync(async (req, res, next) 
       industry: industryData ? industryDto(industryData) : null,
       equipments: equipmentsDto(equipments),
     },
+  });
+});
+
+export const isEquipmentExistController = catchAsync(async (req, res, next) => {
+  const { industry, equipment } = req.query;
+
+  if (!industry || !equipment) {
+    return next(createError(400, "Both industry and equipment names are required"));
+  }
+  const industryData = await findIndustryByName(industry);
+  if (!industryData) {
+    return next(createError(404, `Industry '${industry}' not found`));
+  }
+  const equipmentData = await findEquipmentByName(equipment);
+  if (!equipmentData) {
+    return next(createError(404, `Equipment '${equipment}' not found`));
+  }
+  const exists = equipmentData.industry_id?.toString() === industryData._id.toString();
+  if (!exists) {
+    return next(createError(404, `Equipment '${equipment}' does not exist under industry '${industry}'`));
+  }
+  return res.status(200).json({
+    success: true,
+    exists: true,
+    message: `Equipment '${equipment}' exists under industry '${industry}'`,
+    data: equipmentData,
   });
 });

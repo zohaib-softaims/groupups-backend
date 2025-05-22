@@ -12,6 +12,7 @@ import {
   deleteEquipmentController,
   getAdminEquipmentsController,
   getVisibleEquipmentsController,
+  isEquipmentExistController,
 } from "./controllers.js";
 
 import { createIndustryValidator, updateIndustryValidator } from "./validators/industryValidator.js";
@@ -64,5 +65,6 @@ router.patch(
 router.delete("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), deleteEquipmentController);
 router.get("/admin/equipments", authMiddleware, authorizeMiddleware("admin"), getAdminEquipmentsController);
 router.get("/equipments", getVisibleEquipmentsController);
+router.get("/check-equipment", isEquipmentExistController);
 
 export default router;
