@@ -18,6 +18,25 @@ export const createInteraction = async (interaction) => {
   return response;
 };
 
-export const findAllInteractions = async () => {
-  return await Interaction.find().populate("question_id").sort({ created_at: -1 });
+export const findAllInteractions = async (page, limit, industry_name, user_email) => {
+  const skip = (page - 1) * limit;
+  const query = {};
+
+  if (industry_name) {
+    query["industry_snapshot.name"] = industry_name;
+  }
+
+  if (user_email) {
+    query["created_by.email"] = { $regex: user_email, $options: "i" };
+  }
+
+  const interactions = await Interaction.find(query)
+    .select("user_name user_email equipment_snapshot.name")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Interaction.countDocuments(query);
+
+  return { interactions, total };
 };

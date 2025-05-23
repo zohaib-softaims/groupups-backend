@@ -7,6 +7,14 @@ const interactionSchema = new mongoose.Schema(
       ref: "Equipment",
       required: true,
     },
+    user_name: {
+      type: String,
+      required: true,
+    },
+    user_email: {
+      type: String,
+      required: true,
+    },
     equipment_snapshot: {
       name: {
         type: String,

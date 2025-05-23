@@ -20,7 +20,12 @@ export const chatHandlers = (io, socket) => {
       const parsedLLMResponse = JSON.parse(llmResponse);
       if (parsedLLMResponse?.content?.finalResponse) {
         console.log("final", parsedLLMResponse.content.finalResponse);
-        await addInteractionController(socket.equipmentDetails, parsedLLMResponse.content.finalResponse);
+        await addInteractionController(
+          socket.equipmentDetails,
+          parsedLLMResponse.content.finalResponse,
+          parsedLLMResponse.content.user_name,
+          parsedLLMResponse.content.user_email
+        );
       }
       console.log("llm response", llmResponse);
       socket.emit("receiveMessage", {

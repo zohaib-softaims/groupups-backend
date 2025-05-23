@@ -12,6 +12,7 @@ import { errorHandler } from "./middlewares/errorHandler.js";
 import userAuthRoutes from "./features/Authentication/routes.js";
 import industryEquipmentRoutes from "./features/IndustryEquipment/routes.js";
 import questionsRoutes from "./features/questions-management/routes.js";
+import chatbotRoutes from "./features/Chatbot/routes.js";
 import connectDB from "./utils/dbConnection.js";
 
 configDotenv();
@@ -68,5 +69,6 @@ app.get("/", (req, res) => {
 app.use("/api/v0", userAuthRoutes);
 app.use("/api/v0/industry-equipment", industryEquipmentRoutes);
 app.use("/api/v0/questions", questionsRoutes);
+app.use("/api/v0/chatbot", chatbotRoutes);
 
 app.use(errorHandler);
