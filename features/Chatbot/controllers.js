@@ -1,5 +1,6 @@
 import { findQuestionsByEquipment, createInteraction, findAllInteractions, findInteractionById } from "./services.js";
 import { catchAsync } from "../../utils/catchAsync.js";
+import { interactionResponseDTO, paginatedInteractionsDTO } from "./dtos/interactionDTO.js";
 
 export const getLLMQuestionsController = async (equipmentId) => {
   const questions = equipmentId ? await findQuestionsByEquipment(equipmentId) : await findAllQuestions();
@@ -48,17 +49,18 @@ export const getLLMInteractionsController = catchAsync(async (req, res) => {
 
   const { interactions, total } = await findAllInteractions(page, limit, industry_name, user_email);
 
+  const pagination = {
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+
+  const formattedResponse = paginatedInteractionsDTO(interactions, pagination);
+
   return res.status(200).json({
     message: "Interactions fetched successfully",
-    data: {
-      interactions,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    },
+    data: formattedResponse
   });
 });
 
@@ -66,8 +68,10 @@ export const getInteractionByIdController = catchAsync(async (req, res) => {
   const { id } = req.params;
   const interaction = await findInteractionById(id);
 
+  const formattedResponse = interactionResponseDTO(interaction);
+
   return res.status(200).json({
     message: "Interaction fetched successfully",
-    data: interaction,
+    data: formattedResponse
   });
 });
