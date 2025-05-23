@@ -1,26 +1,5 @@
-import { findQuestionsByEquipment, createInteraction, findAllInteractions } from "./services.js";
+import { findQuestionsByEquipment, createInteraction, findAllInteractions, findInteractionById } from "./services.js";
 import { catchAsync } from "../../utils/catchAsync.js";
-
-export const getLLMInteractionsController = catchAsync(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const { industry_name, user_email } = req.query;
-
-  const { interactions, total } = await findAllInteractions(page, limit, industry_name, user_email);
-
-  return res.status(200).json({
-    message: "Interactions fetched successfully",
-    data: {
-      interactions,
-      pagination: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    },
-  });
-});
 
 export const getLLMQuestionsController = async (equipmentId) => {
   const questions = equipmentId ? await findQuestionsByEquipment(equipmentId) : await findAllQuestions();
@@ -61,3 +40,34 @@ export const addInteractionController = async (equipmentDetails, finalLLMRespons
   const interaction = await createInteraction(interactionPayload);
   return interaction;
 };
+
+export const getLLMInteractionsController = catchAsync(async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const { industry_name, user_email } = req.query;
+
+  const { interactions, total } = await findAllInteractions(page, limit, industry_name, user_email);
+
+  return res.status(200).json({
+    message: "Interactions fetched successfully",
+    data: {
+      interactions,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    },
+  });
+});
+
+export const getInteractionByIdController = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const interaction = await findInteractionById(id);
+
+  return res.status(200).json({
+    message: "Interaction fetched successfully",
+    data: interaction,
+  });
+});

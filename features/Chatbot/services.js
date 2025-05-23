@@ -40,3 +40,16 @@ export const findAllInteractions = async (page, limit, industry_name, user_email
 
   return { interactions, total };
 };
+
+export const findInteractionById = async (interactionId) => {
+  const interaction = await Interaction.findById(interactionId)
+    .populate('created_by', 'name email')
+    .populate('equipment_id', 'name')
+    .populate('industry_id', 'name');
+    
+  if (!interaction) {
+    throw new Error('Interaction not found');
+  }
+  
+  return interaction;
+};
