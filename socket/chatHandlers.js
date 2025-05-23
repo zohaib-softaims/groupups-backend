@@ -6,14 +6,12 @@ export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
     try {
       let systemPrompt;
-      if (socket?.systemPrompt) {
-        systemPrompt = socket?.systemPrompt;
-        console.log("using socket questions");
+      if (socket?.equipmentDetails) {
+        systemPrompt = generateLLMPrompt(socket.equipmentDetails.name, socket.equipmentDetails.questions);
       } else {
-        console.log("fetched questions");
         const equipmentDetails = await getLLMQuestionsController(data.type);
+        socket.equipmentDetails = equipmentDetails;
         systemPrompt = generateLLMPrompt(equipmentDetails.name, equipmentDetails.questions);
-        socket.systemPrompt = systemPrompt;
       }
       const llmResponse = await getLLMResponse({
         systemPrompt,
@@ -22,7 +20,7 @@ export const chatHandlers = (io, socket) => {
       const parsedLLMResponse = JSON.parse(llmResponse);
       if (parsedLLMResponse?.content?.finalResponse) {
         console.log("final", parsedLLMResponse.content.finalResponse);
-        await addInteractionController(parsedLLMResponse.content.finalResponse);
+        await addInteractionController(socket.equipmentDetails, parsedLLMResponse.content.finalResponse);
       }
       console.log("llm response", llmResponse);
       socket.emit("receiveMessage", {
