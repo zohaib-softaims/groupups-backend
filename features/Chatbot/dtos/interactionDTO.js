@@ -41,9 +41,6 @@ export const paginatedInteractionsDTO = (interactions, pagination) => {
       equipment: {
         name: interaction.equipment_snapshot?.name,
       },
-      industry: {
-        name: interaction.industry_snapshot?.name,
-      },
       created_at: interaction.createdAt,
     })),
     pagination: {

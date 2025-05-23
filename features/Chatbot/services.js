@@ -31,25 +31,18 @@ export const findAllInteractions = async (page, limit, industry_name, user_email
   }
 
   const interactions = await Interaction.find(query)
-    .select("user_name user_email equipment_snapshot.name")
+    .select("user_name user_email equipment_snapshot.name createdAt")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit);
-
+  console.log("interactions", interactions);
   const total = await Interaction.countDocuments(query);
 
   return { interactions, total };
 };
 
 export const findInteractionById = async (interactionId) => {
-  const interaction = await Interaction.findById(interactionId)
-    .populate('created_by', 'name email')
-    .populate('equipment_id', 'name')
-    .populate('industry_id', 'name');
-    
-  if (!interaction) {
-    throw new Error('Interaction not found');
-  }
-  
+  const interaction = await Interaction.findById(interactionId);
+
   return interaction;
 };
