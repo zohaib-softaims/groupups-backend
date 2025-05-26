@@ -45,22 +45,22 @@ export const addInteractionController = async (equipmentDetails, finalLLMRespons
 export const getLLMInteractionsController = catchAsync(async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-  const { industry_name, user_email } = req.query;
+  const { equipment_id, user_email } = req.query;
 
-  const { interactions, total } = await findAllInteractions(page, limit, industry_name, user_email);
+  const { interactions, total } = await findAllInteractions(page, limit, equipment_id, user_email);
 
   const pagination = {
     total,
     page,
     limit,
-    totalPages: Math.ceil(total / limit)
+    totalPages: Math.ceil(total / limit),
   };
 
   const formattedResponse = paginatedInteractionsDTO(interactions, pagination);
 
   return res.status(200).json({
     message: "Interactions fetched successfully",
-    data: formattedResponse
+    data: formattedResponse,
   });
 });
 
@@ -72,6 +72,6 @@ export const getInteractionByIdController = catchAsync(async (req, res) => {
 
   return res.status(200).json({
     message: "Interaction fetched successfully",
-    data: formattedResponse
+    data: formattedResponse,
   });
 });

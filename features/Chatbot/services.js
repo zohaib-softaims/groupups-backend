@@ -18,16 +18,16 @@ export const createInteraction = async (interaction) => {
   return response;
 };
 
-export const findAllInteractions = async (page, limit, industry_name, user_email) => {
+export const findAllInteractions = async (page, limit, equipment_id, user_email) => {
   const skip = (page - 1) * limit;
   const query = {};
 
-  if (industry_name) {
-    query["industry_snapshot.name"] = industry_name;
+  if (equipment_id) {
+    query["equipment_id"] = equipment_id;
   }
 
   if (user_email) {
-    query["created_by.email"] = { $regex: user_email, $options: "i" };
+    query["user_email"] = { $regex: user_email, $options: "i" };
   }
 
   const interactions = await Interaction.find(query)
