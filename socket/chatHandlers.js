@@ -17,9 +17,9 @@ export const chatHandlers = (io, socket) => {
         systemPrompt,
         messages: data.messages,
       });
+      console.log("llm response", llmResponse);
       const parsedLLMResponse = JSON.parse(llmResponse);
       if (parsedLLMResponse?.content?.finalResponse) {
-        console.log("test 1");
         await addInteractionController(
           socket.equipmentDetails,
           parsedLLMResponse.content.finalResponse,
@@ -33,7 +33,6 @@ export const chatHandlers = (io, socket) => {
         parsedLLMResponse.content.recommendedProducts = recommendedProducts;
         llmResponse = JSON.stringify(parsedLLMResponse);
       }
-      console.log("llm response", llmResponse);
       socket.emit("receiveMessage", {
         role: "assistant",
         content: llmResponse,
