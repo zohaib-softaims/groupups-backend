@@ -1,6 +1,8 @@
 import { findQuestionsByEquipment, createInteraction, findAllInteractions, findInteractionById } from "./services.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { interactionResponseDTO, paginatedInteractionsDTO } from "./dtos/interactionDTO.js";
+import { productsDto } from "../Products/dtos.js";
+import { findProductsByEquipmentId } from "../Products/services.js";
 
 export const getLLMQuestionsController = async (equipmentId) => {
   const questions = equipmentId ? await findQuestionsByEquipment(equipmentId) : await findAllQuestions();
@@ -75,3 +77,9 @@ export const getInteractionByIdController = catchAsync(async (req, res) => {
     data: formattedResponse,
   });
 });
+
+export const getProductsByEquipmentController = async (equipmentId) => {
+  const products = await findProductsByEquipmentId(equipmentId);
+  console.log("products", products);
+  return productsDto(products);
+};

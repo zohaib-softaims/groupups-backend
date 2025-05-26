@@ -1,4 +1,4 @@
-import { addInteractionController, getLLMQuestionsController } from "../features/Chatbot/controllers.js";
+import { addInteractionController, getLLMQuestionsController, getProductsByEquipmentController } from "../features/Chatbot/controllers.js";
 import { getLLMResponse } from "../lib/llmConfig.js";
 import { generateLLMPrompt } from "../lib/llmPrompt.js";
 
@@ -13,19 +13,25 @@ export const chatHandlers = (io, socket) => {
         socket.equipmentDetails = equipmentDetails;
         systemPrompt = generateLLMPrompt(equipmentDetails.name, equipmentDetails.questions);
       }
-      const llmResponse = await getLLMResponse({
+      let llmResponse = await getLLMResponse({
         systemPrompt,
         messages: data.messages,
       });
       const parsedLLMResponse = JSON.parse(llmResponse);
       if (parsedLLMResponse?.content?.finalResponse) {
-        console.log("final", parsedLLMResponse.content.finalResponse);
+        console.log("test 1");
         await addInteractionController(
           socket.equipmentDetails,
           parsedLLMResponse.content.finalResponse,
           parsedLLMResponse.content.user_name,
           parsedLLMResponse.content.user_email
         );
+        delete parsedLLMResponse.content.finalResponse;
+        delete parsedLLMResponse.content.user_name;
+        delete parsedLLMResponse.content.user_email;
+        const recommendedProducts = await getProductsByEquipmentController(socket?.equipmentDetails?._id);
+        parsedLLMResponse.content.recommendedProducts = recommendedProducts;
+        llmResponse = JSON.stringify(parsedLLMResponse);
       }
       console.log("llm response", llmResponse);
       socket.emit("receiveMessage", {
