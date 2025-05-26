@@ -44,6 +44,7 @@ export const getInteractionStats = async () => {
       { $unwind: { path: "$interactions", preserveNullAndEmptyArrays: true } },
       { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions", 1, 0] } } } },
       { $project: { _id: 0, name: 1, count: 1 } },
+      { $sort: { name: 1 } },
     ]),
 
     // Aggregate last 7 days industry interactions
@@ -53,6 +54,7 @@ export const getInteractionStats = async () => {
       { $match: { $or: [ { "interactions.createdAt": { $gte: sevenDaysAgo } }, { interactions: { $exists: false } } ] } },
       { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions.createdAt", 1, 0] } } } },
       { $project: { _id: 0, name: 1, count: 1 } },
+      { $sort: { name: 1 } },
     ]),
 
     // Aggregate overall equipment interactions
@@ -61,6 +63,7 @@ export const getInteractionStats = async () => {
       { $unwind: { path: "$interactions", preserveNullAndEmptyArrays: true } },
       { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions", 1, 0] } } } },
       { $project: { _id: 0, name: 1, count: 1 } },
+      { $sort: { name: 1 } },
     ]),
 
     // Aggregate last 7 days equipment interactions
@@ -70,6 +73,7 @@ export const getInteractionStats = async () => {
       { $match: { $or: [ { "interactions.createdAt": { $gte: sevenDaysAgo } }, { interactions: { $exists: false } } ] } },
       { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions.createdAt", 1, 0] } } } },
       { $project: { _id: 0, name: 1, count: 1 } },
+      { $sort: { name: 1 } },
     ]),
   ]);
 
