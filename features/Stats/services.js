@@ -31,4 +31,52 @@ export const getStatistics = async () => {
     totalActiveChats,
     activeChatsSinceYesterday,
   };
+};
+
+export const getInteractionStats = async () => {
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const [overallIndustryInteractions, last7DaysIndustryInteractions, overallEquipmentInteractions, last7DaysEquipmentInteractions] = await Promise.all([
+    // Aggregate overall industry interactions
+    Industry.aggregate([
+      { $lookup: { from: "interactions", localField: "_id", foreignField: "industry_id", as: "interactions" } },
+      { $unwind: { path: "$interactions", preserveNullAndEmptyArrays: true } },
+      { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions", 1, 0] } } } },
+      { $project: { _id: 0, name: 1, count: 1 } },
+    ]),
+
+    // Aggregate last 7 days industry interactions
+    Industry.aggregate([
+      { $lookup: { from: "interactions", localField: "_id", foreignField: "industry_id", as: "interactions" } },
+      { $unwind: { path: "$interactions", preserveNullAndEmptyArrays: true } },
+      { $match: { $or: [ { "interactions.createdAt": { $gte: sevenDaysAgo } }, { interactions: { $exists: false } } ] } },
+      { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions.createdAt", 1, 0] } } } },
+      { $project: { _id: 0, name: 1, count: 1 } },
+    ]),
+
+    // Aggregate overall equipment interactions
+    Equipment.aggregate([
+      { $lookup: { from: "interactions", localField: "_id", foreignField: "equipment_id", as: "interactions" } },
+      { $unwind: { path: "$interactions", preserveNullAndEmptyArrays: true } },
+      { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions", 1, 0] } } } },
+      { $project: { _id: 0, name: 1, count: 1 } },
+    ]),
+
+    // Aggregate last 7 days equipment interactions
+    Equipment.aggregate([
+      { $lookup: { from: "interactions", localField: "_id", foreignField: "equipment_id", as: "interactions" } },
+      { $unwind: { path: "$interactions", preserveNullAndEmptyArrays: true } },
+      { $match: { $or: [ { "interactions.createdAt": { $gte: sevenDaysAgo } }, { interactions: { $exists: false } } ] } },
+      { $group: { _id: "$_id", name: { $first: "$name" }, count: { $sum: { $cond: ["$interactions.createdAt", 1, 0] } } } },
+      { $project: { _id: 0, name: 1, count: 1 } },
+    ]),
+  ]);
+
+  return {
+    overallIndustryInteractions,
+    last7DaysIndustryInteractions,
+    overallEquipmentInteractions,
+    last7DaysEquipmentInteractions,
+  };
 }; 
