@@ -13,6 +13,7 @@ import userAuthRoutes from "./features/Authentication/routes.js";
 import industryEquipmentRoutes from "./features/IndustryEquipment/routes.js";
 import questionsRoutes from "./features/questions-management/routes.js";
 import chatbotRoutes from "./features/Chatbot/routes.js";
+import statsRoutes from "./features/Stats/routes.js";
 import connectDB from "./utils/dbConnection.js";
 
 configDotenv();
@@ -70,5 +71,6 @@ app.use("/api/v0", userAuthRoutes);
 app.use("/api/v0/industry-equipment", industryEquipmentRoutes);
 app.use("/api/v0/questions", questionsRoutes);
 app.use("/api/v0/chatbot", chatbotRoutes);
+app.use("/api/v0/stats", statsRoutes);
 
 app.use(errorHandler);
