@@ -45,7 +45,7 @@ router.patch(
 );
 router.delete("/industries/:id", authMiddleware, authorizeMiddleware("admin"), deleteIndustryController);
 router.get("/admin/industries", authMiddleware, authorizeMiddleware("admin"), getAdminIndustriesController);
-router.get("/industries", authMiddleware, getVisibleIndustriesController);
+router.get("/industries", getVisibleIndustriesController);
 
 // Equipment Routes
 router.post(
