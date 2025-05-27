@@ -10,6 +10,7 @@ export const chatHandlers = (io, socket) => {
         systemPrompt = generateLLMPrompt(socket.equipmentDetails.name, socket.equipmentDetails.questions);
       } else {
         const equipmentDetails = await getLLMQuestionsController(data.type);
+        console.log("questions are", equipmentDetails);
         socket.equipmentDetails = equipmentDetails;
         systemPrompt = generateLLMPrompt(equipmentDetails.name, equipmentDetails.questions);
       }
