@@ -15,6 +15,7 @@ import questionsRoutes from "./features/questions-management/routes.js";
 import chatbotRoutes from "./features/Chatbot/routes.js";
 import statsRoutes from "./features/Stats/routes.js";
 import productRoutes from "./features/Products/routes.js";
+import trainingAiSnippetsRoutes from "./features/TrainingAiSnippets/routes.js";
 import connectDB from "./utils/dbConnection.js";
 
 configDotenv();
@@ -74,5 +75,6 @@ app.use("/api/v0/questions", questionsRoutes);
 app.use("/api/v0/chatbot", chatbotRoutes);
 app.use("/api/v0/stats", statsRoutes);
 app.use("/api/v0/products", productRoutes);
+app.use("/api/v0/train-ai", trainingAiSnippetsRoutes);
 
 app.use(errorHandler);

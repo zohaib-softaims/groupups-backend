@@ -23,6 +23,12 @@ const EquipmentSchema = new mongoose.Schema(
         ref: "Question",
       },
     ],
+    trainingAiSnippets: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "TrainingAiSnippet",
+      },
+    ],
   },
   { timestamps: true }
 );
