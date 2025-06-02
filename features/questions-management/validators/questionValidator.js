@@ -38,6 +38,10 @@ const baseQuestionSchema = z.object({
     .min(1, {
       message: "Question text cannot be empty",
     }),
+  context: z
+    .array(z.string().trim())
+    .optional()
+    .default([]),
 });
 
 const simpleQuestionSchema = baseQuestionSchema.extend({

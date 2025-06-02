@@ -6,6 +6,7 @@ export const questionDto = (question) => {
     required: question.required,
     youtube_link: question.youtube_link,
     question_text: question.question_text,
+    context: question.context || [],
     created_at: question.createdAt,
     updated_at: question.updatedAt,
   };
