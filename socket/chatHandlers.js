@@ -1,35 +1,59 @@
 import { addInteractionController, getLLMQuestionsController, getProductsByEquipmentController } from "../features/Chatbot/controllers.js";
+import { generateFinalLLMPrompt } from "../lib/finalResponseLLMPrompt.js";
+import { getCurrentContextPrompt } from "../lib/getCurrentContextPrompt.js";
 import { getLLMResponse } from "../lib/llmConfig.js";
 import { generateLLMPrompt } from "../lib/llmPrompt.js";
 
 export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
     try {
-      let systemPrompt;
-      if (socket?.equipmentDetails) {
-        systemPrompt = generateLLMPrompt(socket.equipmentDetails.name, socket.equipmentDetails.questions);
-      } else {
+      if (!socket?.equipmentDetails) {
         const equipmentDetails = await getLLMQuestionsController(data.type);
-        console.log("questions are", equipmentDetails);
+        console.log("equipment details are", equipmentDetails);
         socket.equipmentDetails = equipmentDetails;
-        systemPrompt = generateLLMPrompt(equipmentDetails.name, equipmentDetails.questions);
       }
+      const currentContextPrompt = getCurrentContextPrompt(socket.equipmentDetails.questions, data.messages);
+      let currentContextLLMResponse = await getLLMResponse({
+        systemPrompt: currentContextPrompt,
+        messages: [],
+      });
+      let parsedCurrentContextLLMResponse = JSON.parse(currentContextLLMResponse);
+      let questionSpecificContext = [];
+      if (parsedCurrentContextLLMResponse.content.question_id) {
+        const questionId = parsedCurrentContextLLMResponse.content.question_id;
+        const matchedQuestion = socket.equipmentDetails?.questions.find((question) => String(question._id) === questionId);
+        if (matchedQuestion) {
+          questionSpecificContext = matchedQuestion.context;
+          console.log("Question Specific Context", questionSpecificContext);
+        }
+      }
+
+      const systemPrompt = generateLLMPrompt(
+        socket.equipmentDetails.name,
+        socket.equipmentDetails.questions,
+        socket.equipmentDetails.trainingAiSnippets,
+        questionSpecificContext
+      );
       let llmResponse = await getLLMResponse({
         systemPrompt,
         messages: data.messages,
       });
       console.log("llm response", llmResponse);
       const parsedLLMResponse = JSON.parse(llmResponse);
-      if (parsedLLMResponse?.content?.finalResponse) {
+      if (parsedLLMResponse?.content?.isQuestionsCompleted) {
+        let finalSystemPrompt = generateFinalLLMPrompt(socket?.equipmentDetails?.questions);
+        let finalLLMResponse = await getLLMResponse({
+          systemPrompt: finalSystemPrompt,
+          messages: data.messages,
+        });
+        console.log("final llm response", finalLLMResponse);
+        const parsedFinalLLMResponse = JSON.parse(finalLLMResponse);
         await addInteractionController(
           socket.equipmentDetails,
-          parsedLLMResponse.content.finalResponse,
-          parsedLLMResponse.content.user_name,
-          parsedLLMResponse.content.user_email
+          parsedFinalLLMResponse.content.finalResponse,
+          parsedFinalLLMResponse.content.user_name,
+          parsedFinalLLMResponse.content.user_email
         );
-        delete parsedLLMResponse.content.finalResponse;
-        delete parsedLLMResponse.content.user_name;
-        delete parsedLLMResponse.content.user_email;
         const recommendedProducts = await getProductsByEquipmentController(socket?.equipmentDetails?._id);
         parsedLLMResponse.content.recommendedProducts = recommendedProducts;
         llmResponse = JSON.stringify(parsedLLMResponse);
