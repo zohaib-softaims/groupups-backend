@@ -204,11 +204,8 @@ export const resetPassword = catchAsync(async (req, res, next) => {
     return next(createError(400, "Invalid or expired token"));
   }
 
-  // Hash the new password
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-  // Update the user's password and clear the reset token
   user.password = hashedPassword;
   user.resetPasswordToken = null;
   user.resetPasswordExpiry = null;
@@ -241,5 +238,31 @@ export const logoutUser = catchAsync(async (req, res, next) => {
   return res.status(200).json({
     success: true,
     message: "Logout successful.",
+  });
+});
+
+export const updatePassword = catchAsync(async (req, res, next) => {
+  const { _id } = req.user;
+  const { currentPassword, newPassword } = req.body;
+
+  const user = await getUserById(_id);
+  if (!user) {
+    return next(createError(404, "User not found"));
+  }
+
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+  if (!isCurrentPasswordValid) {
+    return next(createError(401, "Current password is incorrect"));
+  }
+
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    message: "Password updated successfully.",
   });
 });
