@@ -17,6 +17,8 @@ import {
   findVisibleEquipments,
   reorderIndustries,
   reorderAllIndustries,
+  reorderEquipments,
+  reorderAllEquipments,
 } from "./services.js";
 
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
@@ -192,6 +194,8 @@ export const deleteEquipmentController = catchAsync(async (req, res, next) => {
     return next(createError(404, "Equipment not found"));
   }
 
+  await reorderAllEquipments(equipment.industry_id);
+
   return res.status(200).json({
     success: true,
     message: "Equipment deleted successfully",
@@ -271,5 +275,18 @@ export const reorderIndustriesController = async (req, res) => {
     res.status(200).json({ message: "Industries reordered successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to reorder industries", error: error.message });
+  }
+};
+
+export const reorderEquipmentsController = async (req, res) => {
+  const { orderedIds } = req.body;
+  if (!Array.isArray(orderedIds)) {
+    return res.status(400).json({ message: "Invalid input" });
+  }
+  try {
+    await reorderEquipments(orderedIds);
+    res.status(200).json({ message: "Equipments reordered successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to reorder equipments", error: error.message });
   }
 };
