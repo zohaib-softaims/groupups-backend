@@ -29,6 +29,10 @@ const EquipmentSchema = new mongoose.Schema(
         ref: "TrainingAiSnippet",
       },
     ],
+    order: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
