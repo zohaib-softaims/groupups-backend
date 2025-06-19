@@ -3,6 +3,8 @@ import { Equipment } from "../../shared/models/EquipmentModel.js";
 
 // Industry Services
 export const createIndustry = async (industryData) => {
+  const count = await Industry.countDocuments();
+  industryData.order = count;
   const industry = new Industry(industryData);
   return await industry.save();
 };
@@ -31,15 +33,38 @@ export const findIndustryById = async (id) => {
 };
 
 export const findAllIndustries = async (query = {}) => {
-  return await Industry.find(query).sort({ createdAt: -1 });
+  return await Industry.find(query).sort({ order: 1 });
 };
 
 export const findVisibleIndustries = async () => {
-  return await Industry.find({ visibility: true }).sort({ createdAt: -1 });
+  return await Industry.find({ visibility: true }).sort({ order: 1 });
 };
 
 export const countEquipmentsByIndustry = async (industryId) => {
   return await Equipment.countDocuments({ industry: industryId });
+};
+
+export const reorderIndustries = async (orderedIds) => {
+  const bulkOps = orderedIds.map((id, index) => ({
+    updateOne: {
+      filter: { _id: id },
+      update: { $set: { order: index } }
+    }
+  }));
+  return await Industry.bulkWrite(bulkOps);
+};
+
+export const reorderAllIndustries = async () => {
+  const industries = await Industry.find({}).sort({ order: 1 });
+  const bulkOps = industries.map((industry, index) => ({
+    updateOne: {
+      filter: { _id: industry._id },
+      update: { $set: { order: index } }
+    }
+  }));
+  if (bulkOps.length > 0) {
+    await Industry.bulkWrite(bulkOps);
+  }
 };
 
 // Equipment Services

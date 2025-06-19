@@ -13,6 +13,7 @@ import {
   getAdminEquipmentsController,
   getVisibleEquipmentsController,
   isEquipmentExistController,
+  reorderIndustriesController,
 } from "./controllers.js";
 
 import { createIndustryValidator, updateIndustryValidator } from "./validators/industryValidator.js";
@@ -46,6 +47,12 @@ router.patch(
 router.delete("/industries/:id", authMiddleware, authorizeMiddleware("admin"), deleteIndustryController);
 router.get("/admin/industries", authMiddleware, authorizeMiddleware("admin"), getAdminIndustriesController);
 router.get("/industries", getVisibleIndustriesController);
+router.post(
+  "/reorder-industries",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  reorderIndustriesController
+);
 
 // Equipment Routes
 router.post(
