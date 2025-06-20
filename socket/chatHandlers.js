@@ -7,7 +7,7 @@ import { generateLLMPrompt } from "../lib/llmPrompt.js";
 export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
     try {
-      if (!socket?.equipmentDetails) {
+      if (!socket?.equipmentDetails || String(socket?.equipmentDetails?._id) != data.type) {
         const equipmentDetails = await getLLMQuestionsController(data.type);
         console.log("equipment details are", equipmentDetails);
         socket.equipmentDetails = equipmentDetails;
