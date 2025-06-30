@@ -5,17 +5,21 @@ export const createProductValidator = z.object({
     .string({ required_error: "name is required" })
     .min(2, "name must be at least 2 characters")
     .max(100, "name must not exceed 100 characters"),
-  description: z.string({ required_error: "description is required" }).min(10, "description must be at least 10 characters"),
+  description: z
+    .string({ required_error: "description is required" })
+    .min(50, "description must be at least 50 characters")
+    .max(1000, "description must not exceed 1000 characters"),
   price: z.coerce
     .number({
       required_error: "price is required",
       invalid_type_error: "price must be a number",
     })
-    .min(0, "price must be a positive number"),
+    .min(10, "price must be a atleast 10"),
 
   why_good_fit_reason: z
     .string({ required_error: "whyGoodFit description is required" })
-    .min(10, "whyGoodFit description must be at least 10 characters"),
+    .min(50, "whyGoodFit description must be at least 50 characters")
+    .max(1000, "whyGoodFit description must be at least 1000 characters"),
   equipment_id: z.string({ required_error: "equipment_id is required" }).regex(/^[0-9a-fA-F]{24}$/, "Invalid equipment_id format"),
 });
 
