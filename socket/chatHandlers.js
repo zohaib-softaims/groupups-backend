@@ -6,10 +6,10 @@ import { generateLLMPrompt } from "../lib/llmPrompt.js";
 
 export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
+    console.log("frontend request received", data);
     try {
       if (!socket?.equipmentDetails || String(socket?.equipmentDetails?._id) != data.type) {
         const equipmentDetails = await getLLMQuestionsController(data.type);
-        console.log("equipment details are", equipmentDetails);
         socket.equipmentDetails = equipmentDetails;
       }
       const currentContextPrompt = getCurrentContextPrompt(socket.equipmentDetails.questions, data.messages);
@@ -24,7 +24,6 @@ export const chatHandlers = (io, socket) => {
         const matchedQuestion = socket.equipmentDetails?.questions.find((question) => String(question._id) === questionId);
         if (matchedQuestion) {
           questionSpecificContext = matchedQuestion.context;
-          console.log("Question Specific Context", questionSpecificContext);
         }
       }
 
