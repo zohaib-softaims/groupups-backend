@@ -47,6 +47,6 @@ export const findAllInteractions = async (page, limit, equipment_id, user_email)
 
 export const findInteractionById = async (interactionId) => {
   const interaction = await Interaction.findById(interactionId);
-
+console.log("interaction", interaction);
   return interaction;
 };

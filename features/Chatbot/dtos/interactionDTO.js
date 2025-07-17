@@ -21,9 +21,14 @@ export const interactionResponseDTO = (interaction) => {
         required: response.question_snapshot.required,
         youtube_link: response.question_snapshot.youtube_link,
         options: response.question_snapshot.options,
-        allowMultipleSelection: response.question_snapshot.allowMultipleSelection,
+        allowMultipleSelection:
+          response.question_snapshot.allowMultipleSelection,
       },
       user_response: response.user_response,
+    })),
+    messagesHistory: interaction.messagesHistory.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
     })),
     created_at: interaction.createdAt,
     updated_at: interaction.updatedAt,

@@ -82,6 +82,12 @@ const interactionSchema = new mongoose.Schema(
         },
       },
     ],
+    messagesHistory: [
+      {
+        role: { type: String, required: true },
+        content: { type: String, required: true },
+      },
+    ],
   },
   {
     timestamps: true,

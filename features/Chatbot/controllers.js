@@ -1,18 +1,36 @@
-import { findQuestionsByEquipment, createInteraction, findAllInteractions, findInteractionById } from "./services.js";
+import {
+  findQuestionsByEquipment,
+  createInteraction,
+  findAllInteractions,
+  findInteractionById,
+} from "./services.js";
 import { catchAsync } from "../../utils/catchAsync.js";
-import { interactionResponseDTO, paginatedInteractionsDTO } from "./dtos/interactionDTO.js";
+import {
+  interactionResponseDTO,
+  paginatedInteractionsDTO,
+} from "./dtos/interactionDTO.js";
 import { productsDto } from "../Products/dtos.js";
 import { findProductsByEquipmentId } from "../Products/services.js";
 
 export const getLLMQuestionsController = async (equipmentId) => {
-  const questions = equipmentId ? await findQuestionsByEquipment(equipmentId) : await findAllQuestions();
+  const questions = equipmentId
+    ? await findQuestionsByEquipment(equipmentId)
+    : await findAllQuestions();
   return questions || [];
 };
 
-export const addInteractionController = async (equipmentDetails, finalLLMResponse, user_name, user_email) => {
+export const addInteractionController = async (
+  equipmentDetails,
+  finalLLMResponse,
+  user_name,
+  user_email,
+  messagesHistory
+) => {
   const responses = finalLLMResponse
     .map(({ question_id, user_response }) => {
-      const matchedQuestion = equipmentDetails.questions.find((q) => q._id.toString() === question_id.toString());
+      const matchedQuestion = equipmentDetails.questions.find(
+        (q) => q._id.toString() === question_id.toString()
+      );
       if (!matchedQuestion) return null;
       return {
         question_id: matchedQuestion._id,
@@ -22,12 +40,27 @@ export const addInteractionController = async (equipmentDetails, finalLLMRespons
           required: matchedQuestion.required || false,
           youtube_link: matchedQuestion.youtube_link || "",
           options: matchedQuestion.options || [],
-          allowMultipleSelection: matchedQuestion.allowMultipleSelection || false,
+          allowMultipleSelection:
+            matchedQuestion.allowMultipleSelection || false,
         },
         user_response,
       };
     })
     .filter(Boolean);
+
+  // Clean messagesHistory to extract only the text content
+  const cleanedMessagesHistory = messagesHistory.map((msg) => {
+    let parsedContent;
+    try {
+      parsedContent = JSON.parse(msg.content);
+    } catch {
+      parsedContent = { content: msg.content };
+    }
+    return {
+      role: msg.role,
+      content: parsedContent.content?.responseText || msg.content,
+    };
+  });
 
   const interactionPayload = {
     equipment_id: equipmentDetails._id,
@@ -41,6 +74,7 @@ export const addInteractionController = async (equipmentDetails, finalLLMRespons
       name: equipmentDetails.industry_id.name,
     },
     responses,
+    messagesHistory: cleanedMessagesHistory,
   };
 
   const interaction = await createInteraction(interactionPayload);
@@ -52,7 +86,12 @@ export const getLLMInteractionsController = catchAsync(async (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const { equipment_id, user_email } = req.query;
 
-  const { interactions, total } = await findAllInteractions(page, limit, equipment_id, user_email);
+  const { interactions, total } = await findAllInteractions(
+    page,
+    limit,
+    equipment_id,
+    user_email
+  );
 
   const pagination = {
     total,
@@ -72,7 +111,6 @@ export const getLLMInteractionsController = catchAsync(async (req, res) => {
 export const getInteractionByIdController = catchAsync(async (req, res) => {
   const { id } = req.params;
   const interaction = await findInteractionById(id);
-
   const formattedResponse = interactionResponseDTO(interaction);
 
   return res.status(200).json({
@@ -83,6 +121,5 @@ export const getInteractionByIdController = catchAsync(async (req, res) => {
 
 export const getProductsByEquipmentController = async (equipmentId) => {
   const products = await findProductsByEquipmentId(equipmentId);
-  console.log("products", products);
   return productsDto(products);
 };

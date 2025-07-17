@@ -1,4 +1,8 @@
-import { addInteractionController, getLLMQuestionsController, getProductsByEquipmentController } from "../features/Chatbot/controllers.js";
+import {
+  addInteractionController,
+  getLLMQuestionsController,
+  getProductsByEquipmentController,
+} from "../features/Chatbot/controllers.js";
 import { generateFinalLLMPrompt } from "../lib/finalResponseLLMPrompt.js";
 import { getCurrentContextPrompt } from "../lib/getCurrentContextPrompt.js";
 import { getLLMResponse } from "../lib/llmConfig.js";
@@ -7,21 +11,31 @@ import { generateLLMPrompt } from "../lib/llmPrompt.js";
 export const chatHandlers = (io, socket) => {
   socket.on("sendMessage", async (data, callback) => {
     try {
-      if (!socket?.equipmentDetails || String(socket?.equipmentDetails?._id) != data.type) {
+      if (
+        !socket?.equipmentDetails ||
+        String(socket?.equipmentDetails?._id) != data.type
+      ) {
         const equipmentDetails = await getLLMQuestionsController(data.type);
         console.log("equipment details are", equipmentDetails);
         socket.equipmentDetails = equipmentDetails;
       }
-      const currentContextPrompt = getCurrentContextPrompt(socket.equipmentDetails.questions, data.messages);
+      const currentContextPrompt = getCurrentContextPrompt(
+        socket.equipmentDetails.questions,
+        data.messages
+      );
       let currentContextLLMResponse = await getLLMResponse({
         systemPrompt: currentContextPrompt,
         messages: [],
       });
-      let parsedCurrentContextLLMResponse = JSON.parse(currentContextLLMResponse);
+      let parsedCurrentContextLLMResponse = JSON.parse(
+        currentContextLLMResponse
+      );
       let questionSpecificContext = [];
       if (parsedCurrentContextLLMResponse.content.question_id) {
         const questionId = parsedCurrentContextLLMResponse.content.question_id;
-        const matchedQuestion = socket.equipmentDetails?.questions.find((question) => String(question._id) === questionId);
+        const matchedQuestion = socket.equipmentDetails?.questions.find(
+          (question) => String(question._id) === questionId
+        );
         if (matchedQuestion) {
           questionSpecificContext = matchedQuestion.context;
           console.log("Question Specific Context", questionSpecificContext);
@@ -41,7 +55,10 @@ export const chatHandlers = (io, socket) => {
       console.log("llm response", llmResponse);
       const parsedLLMResponse = JSON.parse(llmResponse);
       if (parsedLLMResponse?.content?.isQuestionsCompleted) {
-        let finalSystemPrompt = generateFinalLLMPrompt(socket?.equipmentDetails?.questions);
+        let finalSystemPrompt = generateFinalLLMPrompt(
+          socket?.equipmentDetails?.questions
+        );
+        console.log("datamessages", data.messages);
         let finalLLMResponse = await getLLMResponse({
           systemPrompt: finalSystemPrompt,
           messages: data.messages,
@@ -52,9 +69,12 @@ export const chatHandlers = (io, socket) => {
           socket.equipmentDetails,
           parsedFinalLLMResponse.content.finalResponse,
           parsedFinalLLMResponse.content.user_name,
-          parsedFinalLLMResponse.content.user_email
+          parsedFinalLLMResponse.content.user_email,
+          data.messages
         );
-        const recommendedProducts = await getProductsByEquipmentController(socket?.equipmentDetails?._id);
+        const recommendedProducts = await getProductsByEquipmentController(
+          socket?.equipmentDetails?._id
+        );
         parsedLLMResponse.content.recommendedProducts = recommendedProducts;
         llmResponse = JSON.stringify(parsedLLMResponse);
       }
@@ -65,7 +85,8 @@ export const chatHandlers = (io, socket) => {
     } catch (error) {
       console.error("LLM processing error:", error);
       const fallbackResponse = JSON.stringify({
-        content: "⚠️ Sorry, something went wrong while processing your request. Please try again.",
+        content:
+          "⚠️ Sorry, something went wrong while processing your request. Please try again.",
         progress: 0,
         error: true,
       });
