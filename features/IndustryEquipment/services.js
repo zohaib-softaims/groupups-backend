@@ -1,5 +1,6 @@
 import { Industry } from "../../shared/models/IndustryModel.js";
 import { Equipment } from "../../shared/models/EquipmentModel.js";
+import { Product } from "../../shared/models/ProductModel.js";
 
 // Industry Services
 export const createIndustry = async (industryData) => {
@@ -10,7 +11,10 @@ export const createIndustry = async (industryData) => {
 };
 
 export const findIndustryByIdAndUpdate = async (id, updateData) => {
-  return await Industry.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  return await Industry.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 };
 
 export const findIndustryByIdAndDelete = async (id) => {
@@ -48,8 +52,8 @@ export const reorderIndustries = async (orderedIds) => {
   const bulkOps = orderedIds.map((id, index) => ({
     updateOne: {
       filter: { _id: id },
-      update: { $set: { order: index } }
-    }
+      update: { $set: { order: index } },
+    },
   }));
   return await Industry.bulkWrite(bulkOps);
 };
@@ -59,8 +63,8 @@ export const reorderAllIndustries = async () => {
   const bulkOps = industries.map((industry, index) => ({
     updateOne: {
       filter: { _id: industry._id },
-      update: { $set: { order: index } }
-    }
+      update: { $set: { order: index } },
+    },
   }));
   if (bulkOps.length > 0) {
     await Industry.bulkWrite(bulkOps);
@@ -69,14 +73,19 @@ export const reorderAllIndustries = async () => {
 
 // Equipment Services
 export const createEquipment = async (equipmentData) => {
-  const count = await Equipment.countDocuments({ industry_id: equipmentData.industry_id });
+  const count = await Equipment.countDocuments({
+    industry_id: equipmentData.industry_id,
+  });
   equipmentData.order = count;
   const equipment = new Equipment(equipmentData);
   return await equipment.save();
 };
 
 export const findEquipmentByIdAndUpdate = async (id, updateData) => {
-  return await Equipment.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  return await Equipment.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 };
 
 export const findEquipmentByIdAndDelete = async (id) => {
@@ -114,8 +123,8 @@ export const reorderEquipments = async (orderedIds) => {
   const bulkOps = orderedIds.map((id, index) => ({
     updateOne: {
       filter: { _id: id },
-      update: { $set: { order: index } }
-    }
+      update: { $set: { order: index } },
+    },
   }));
   return await Equipment.bulkWrite(bulkOps);
 };
@@ -126,10 +135,15 @@ export const reorderAllEquipments = async (industryId = null) => {
   const bulkOps = equipments.map((equipment, index) => ({
     updateOne: {
       filter: { _id: equipment._id },
-      update: { $set: { order: index } }
-    }
+      update: { $set: { order: index } },
+    },
   }));
   if (bulkOps.length > 0) {
     await Equipment.bulkWrite(bulkOps);
   }
+};
+
+// Product Services
+export const countProductsByEquipment = async (equipmentId) => {
+  return await Product.countDocuments({ equipment_id: equipmentId });
 };

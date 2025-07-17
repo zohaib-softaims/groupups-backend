@@ -19,6 +19,7 @@ import {
   reorderAllIndustries,
   reorderEquipments,
   reorderAllEquipments,
+  countProductsByEquipment,
 } from "./services.js";
 
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
@@ -38,7 +39,12 @@ export const createIndustryController = catchAsync(async (req, res, next) => {
   if (industry_image) {
     const uploadResult = await s3Uploader(industry_image);
     if (!uploadResult.success) {
-      return next(createError(500, `Error uploading industry_image: ${uploadResult.error}`));
+      return next(
+        createError(
+          500,
+          `Error uploading industry_image: ${uploadResult.error}`
+        )
+      );
     }
     imageUrl = uploadResult.url;
   }
@@ -72,7 +78,12 @@ export const updateIndustryController = catchAsync(async (req, res, next) => {
   if (req.file) {
     const uploadResult = await s3Uploader(req.file);
     if (!uploadResult.success) {
-      return next(createError(500, `Error uploading industry_image: ${uploadResult.error}`));
+      return next(
+        createError(
+          500,
+          `Error uploading industry_image: ${uploadResult.error}`
+        )
+      );
     }
     imageUrl = uploadResult.url;
   }
@@ -101,7 +112,9 @@ export const deleteIndustryController = catchAsync(async (req, res, next) => {
 
   const equipmentCount = await countEquipmentsByIndustry(id);
   if (equipmentCount > 0) {
-    return next(createError(400, "Cannot delete industry with associated equipment"));
+    return next(
+      createError(400, "Cannot delete industry with associated equipment")
+    );
   }
 
   const industry = await findIndustryByIdAndDelete(id);
@@ -138,7 +151,7 @@ export const getVisibleIndustriesController = catchAsync(async (req, res) => {
 });
 
 export const createEquipmentController = catchAsync(async (req, res, next) => {
-  const { name, industry_id } = req.body;
+  const { name, industry_id, maxProducts } = req.body;
 
   const industry = await findIndustryById(industry_id);
   if (!industry) {
@@ -150,7 +163,12 @@ export const createEquipmentController = catchAsync(async (req, res, next) => {
     return next(createError(409, "Equipment with this name already exists"));
   }
 
-  const equipment = await createEquipment(req.body);
+  const equipmentData = {
+    ...req.body,
+    maxProducts: typeof maxProducts !== "undefined" ? maxProducts : 3,
+  };
+
+  const equipment = await createEquipment(equipmentData);
   return res.status(201).json({
     success: true,
     message: "Equipment created successfully",
@@ -160,7 +178,7 @@ export const createEquipmentController = catchAsync(async (req, res, next) => {
 
 export const updateEquipmentController = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-  const { name, industry: industryId } = req.body;
+  const { name, industry: industryId, maxProducts } = req.body;
 
   if (industryId) {
     const industry = await findIndustryById(industryId);
@@ -176,7 +194,28 @@ export const updateEquipmentController = catchAsync(async (req, res, next) => {
     }
   }
 
-  const equipment = await findEquipmentByIdAndUpdate(id, req.body);
+  // Check if maxProducts is being decremented below assigned products
+  if (typeof maxProducts !== "undefined") {
+    const assignedProducts = await countProductsByEquipment(id);
+    if (maxProducts < assignedProducts) {
+      return next(
+        createError(
+          400,
+          `Cannot set maxProducts to ${maxProducts} because there are already ${assignedProducts} products assigned`
+        )
+      );
+    }
+  }
+
+  const updateData = {
+    ...req.body,
+  };
+
+  if (typeof maxProducts !== "undefined") {
+    updateData.maxProducts = maxProducts;
+  }
+
+  const equipment = await findEquipmentByIdAndUpdate(id, updateData);
   if (!equipment) {
     return next(createError(404, "Equipment not found"));
   }
@@ -189,7 +228,17 @@ export const updateEquipmentController = catchAsync(async (req, res, next) => {
 });
 
 export const deleteEquipmentController = catchAsync(async (req, res, next) => {
-  const equipment = await findEquipmentByIdAndDelete(req.params.id);
+  const equipmentId = req.params.id;
+
+  // Use the service to count products assigned to this equipment
+  const productCount = await countProductsByEquipment(equipmentId);
+  if (productCount > 0) {
+    return next(
+      createError(400, "Cannot delete equipment with assigned products")
+    );
+  }
+
+  const equipment = await findEquipmentByIdAndDelete(equipmentId);
   if (!equipment) {
     return next(createError(404, "Equipment not found"));
   }
@@ -211,39 +260,47 @@ export const getAdminEquipmentsController = catchAsync(async (req, res) => {
   });
 });
 
-export const getVisibleEquipmentsController = catchAsync(async (req, res, next) => {
-  const { industry } = req.query;
-  let industryData = null;
-  let equipments = [];
+export const getVisibleEquipmentsController = catchAsync(
+  async (req, res, next) => {
+    const { industry } = req.query;
+    let industryData = null;
+    let equipments = [];
 
-  if (industry) {
-    industryData = await findIndustryByName(industry);
-    if (!industryData) {
-      return next(createError(404, `Industry with name '${industry}' not found`));
+    if (industry) {
+      industryData = await findIndustryByName(industry);
+      if (!industryData) {
+        return next(
+          createError(404, `Industry with name '${industry}' not found`)
+        );
+      }
+      if (!industryData.visibility) {
+        return next(createError(403, `Industry '${industry}' is not visible`));
+      }
+      equipments = await findVisibleEquipments(industryData._id);
+    } else {
+      equipments = await findVisibleEquipments();
     }
-    if (!industryData.visibility) {
-      return next(createError(403, `Industry '${industry}' is not visible`));
-    }
-    equipments = await findVisibleEquipments(industryData._id);
-  } else {
-    equipments = await findVisibleEquipments();
+
+    return res.status(200).json({
+      success: true,
+      message: industry
+        ? `Equipments for industry '${industry}' fetched successfully`
+        : "All visible equipments fetched successfully",
+      data: {
+        industry: industryData ? industryDto(industryData) : null,
+        equipments: equipmentsDto(equipments),
+      },
+    });
   }
-
-  return res.status(200).json({
-    success: true,
-    message: industry ? `Equipments for industry '${industry}' fetched successfully` : "All visible equipments fetched successfully",
-    data: {
-      industry: industryData ? industryDto(industryData) : null,
-      equipments: equipmentsDto(equipments),
-    },
-  });
-});
+);
 
 export const isEquipmentExistController = catchAsync(async (req, res, next) => {
   const { industry, equipment } = req.query;
 
   if (!industry || !equipment) {
-    return next(createError(400, "Both industry and equipment names are required"));
+    return next(
+      createError(400, "Both industry and equipment names are required")
+    );
   }
   const industryData = await findIndustryByName(industry);
   if (!industryData) {
@@ -253,9 +310,15 @@ export const isEquipmentExistController = catchAsync(async (req, res, next) => {
   if (!equipmentData) {
     return next(createError(404, `Equipment '${equipment}' not found`));
   }
-  const exists = equipmentData.industry_id?.toString() === industryData._id.toString();
+  const exists =
+    equipmentData.industry_id?.toString() === industryData._id.toString();
   if (!exists) {
-    return next(createError(404, `Equipment '${equipment}' does not exist under industry '${industry}'`));
+    return next(
+      createError(
+        404,
+        `Equipment '${equipment}' does not exist under industry '${industry}'`
+      )
+    );
   }
   return res.status(200).json({
     success: true,
@@ -274,7 +337,9 @@ export const reorderIndustriesController = async (req, res) => {
     await reorderIndustries(orderedIds);
     res.status(200).json({ message: "Industries reordered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to reorder industries", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to reorder industries", error: error.message });
   }
 };
 
@@ -287,6 +352,8 @@ export const reorderEquipmentsController = async (req, res) => {
     await reorderEquipments(orderedIds);
     res.status(200).json({ message: "Equipments reordered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Failed to reorder equipments", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to reorder equipments", error: error.message });
   }
 };

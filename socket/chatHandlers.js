@@ -58,12 +58,12 @@ export const chatHandlers = (io, socket) => {
         let finalSystemPrompt = generateFinalLLMPrompt(
           socket?.equipmentDetails?.questions
         );
-        console.log("datamessages", data.messages);
+       
         let finalLLMResponse = await getLLMResponse({
           systemPrompt: finalSystemPrompt,
           messages: data.messages,
         });
-        console.log("final llm response", finalLLMResponse);
+      
         const parsedFinalLLMResponse = JSON.parse(finalLLMResponse);
         await addInteractionController(
           socket.equipmentDetails,

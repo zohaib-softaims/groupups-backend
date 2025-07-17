@@ -33,6 +33,15 @@ const EquipmentSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    productsVisibility: {
+      type: Boolean,
+      default: true,
+    },
+    maxProducts: {
+      type: Number,
+      default: 3,
+      min: [3, "Max Products must be at least 3"],
+    },
   },
   { timestamps: true }
 );
