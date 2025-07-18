@@ -16,6 +16,10 @@ const QuestionSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    image: {
+      type: String,
+      required: true,
+    },
     youtube_link: {
       type: String,
       trim: true,

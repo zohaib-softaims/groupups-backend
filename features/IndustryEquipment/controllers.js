@@ -20,11 +20,12 @@ import {
   reorderEquipments,
   reorderAllEquipments,
   countProductsByEquipment,
+  findEquipmentById,
 } from "./services.js";
 
 import { industryDto, industriesDto } from "../../shared/dtos/industryDto.js";
 import { equipmentDto, equipmentsDto } from "../../shared/dtos/equipmentDto.js";
-import { s3Uploader } from "../../utils/s3Uploader.js";
+import { s3Uploader, deleteFromS3 } from "../../utils/s3Uploader.js";
 
 export const createIndustryController = catchAsync(async (req, res, next) => {
   const { name } = req.body;
@@ -75,7 +76,10 @@ export const updateIndustryController = catchAsync(async (req, res, next) => {
     }
   }
   let imageUrl;
+  let oldIndustry = null;
   if (req.file) {
+    // Find old industry to get previous image
+    oldIndustry = await findIndustryById(id);
     const uploadResult = await s3Uploader(req.file);
     if (!uploadResult.success) {
       return next(
@@ -96,6 +100,12 @@ export const updateIndustryController = catchAsync(async (req, res, next) => {
   }
 
   const industry = await findIndustryByIdAndUpdate(id, updateData);
+
+  // Remove old image from S3 if a new image was uploaded
+  if (imageUrl && oldIndustry && oldIndustry.industry_image) {
+    await deleteFromS3(oldIndustry.industry_image);
+  }
+
   if (!industry) {
     return next(createError(404, "Industry not found"));
   }
@@ -117,10 +127,18 @@ export const deleteIndustryController = catchAsync(async (req, res, next) => {
     );
   }
 
-  const industry = await findIndustryByIdAndDelete(id);
+  // Find industry before deleting to get image URL
+  const industry = await findIndustryById(id);
   if (!industry) {
     return next(createError(404, "Industry not found"));
   }
+
+  // Remove industry image from S3 if exists
+  if (industry.industry_image) {
+    await deleteFromS3(industry.industry_image);
+  }
+
+  await findIndustryByIdAndDelete(id);
 
   await reorderAllIndustries();
 
@@ -357,3 +375,20 @@ export const reorderEquipmentsController = async (req, res) => {
       .json({ message: "Failed to reorder equipments", error: error.message });
   }
 };
+
+export const getEquipmentEndingMessageAndToneController = catchAsync(
+  async (req, res, next) => {
+    const { id } = req.params;
+    const equipment = await findEquipmentById(id);
+    if (!equipment) {
+      return next(createError(404, "Equipment not found"));
+    }
+    return res.status(200).json({
+      success: true,
+      data: {
+        endingMessage: equipment.endingMessage,
+        tone: equipment.tone,
+      },
+    });
+  }
+);

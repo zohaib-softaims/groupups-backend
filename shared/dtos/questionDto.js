@@ -9,6 +9,7 @@ export const questionDto = (question) => {
     context: question.context || [],
     created_at: question.createdAt,
     updated_at: question.updatedAt,
+    image: question.image,
   };
 
   if (question.question_type === "multiple_choice") {

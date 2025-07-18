@@ -1,6 +1,6 @@
 import { catchAsync } from "../../utils/catchAsync.js";
 import createError from "http-errors";
-import { s3Uploader } from "../../utils/s3Uploader.js";
+import { s3Uploader, deleteFromS3 } from "../../utils/s3Uploader.js";
 import {
   createProduct,
   findProductById,
@@ -12,7 +12,8 @@ import { productDto, productsDto } from "./dtos.js";
 import { findEquipmentById } from "../IndustryEquipment/services.js";
 
 export const createProductController = catchAsync(async (req, res, next) => {
-  const { name, description, price, why_good_fit_reason, equipment_id } = req.body;
+  const { name, description, price, why_good_fit_reason, equipment_id } =
+    req.body;
   const imageFile = req.file;
   if (!imageFile) {
     return next(createError(400, "Product image is required"));
@@ -23,7 +24,9 @@ export const createProductController = catchAsync(async (req, res, next) => {
   }
   const uploadResult = await s3Uploader(imageFile);
   if (!uploadResult.success) {
-    return next(createError(500, `Error uploading product image: ${uploadResult.error}`));
+    return next(
+      createError(500, `Error uploading product image: ${uploadResult.error}`)
+    );
   }
   const productData = {
     name,
@@ -42,21 +45,23 @@ export const createProductController = catchAsync(async (req, res, next) => {
   });
 });
 
-export const getProductsByEquipmentController = catchAsync(async (req, res, next) => {
-  const { equipmentId } = req.params;
-  const equipment = await findEquipmentById(equipmentId);
-  if (!equipment) {
-    return next(createError(404, "Equipment not found"));
+export const getProductsByEquipmentController = catchAsync(
+  async (req, res, next) => {
+    const { equipmentId } = req.params;
+    const equipment = await findEquipmentById(equipmentId);
+    if (!equipment) {
+      return next(createError(404, "Equipment not found"));
+    }
+
+    const products = await findProductsByEquipmentId(equipmentId);
+
+    return res.status(200).json({
+      success: true,
+      message: `Products for equipment ${equipmentId} fetched successfully`,
+      data: productsDto(products),
+    });
   }
-
-  const products = await findProductsByEquipmentId(equipmentId);
-
-  return res.status(200).json({
-    success: true,
-    message: `Products for equipment ${equipmentId} fetched successfully`,
-    data: productsDto(products),
-  });
-});
+);
 
 export const updateProductController = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -75,9 +80,15 @@ export const updateProductController = catchAsync(async (req, res, next) => {
   }
 
   if (imageFile) {
+    // Remove old image from S3
+    if (product.image) {
+      const deleteResult = await deleteFromS3(product.image);
+    }
     const uploadResult = await s3Uploader(imageFile);
     if (!uploadResult.success) {
-      return next(createError(500, `Error uploading product image: ${uploadResult.error}`));
+      return next(
+        createError(500, `Error uploading product image: ${uploadResult.error}`)
+      );
     }
     updateData.image = uploadResult.url;
   }
@@ -97,6 +108,12 @@ export const deleteProductController = catchAsync(async (req, res, next) => {
 
   if (!product) {
     return next(createError(404, "Product not found"));
+  }
+  // Remove image from S3
+  if (product.image) {
+    console.log("Attempting to delete product image from S3:", product.image);
+    const deleteResult = await deleteFromS3(product.image);
+    console.log("Delete result:", deleteResult);
   }
   await findProductByIdAndDelete(id);
 

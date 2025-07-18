@@ -5,7 +5,8 @@ export const findQuestionsByEquipment = async (equipmentId) => {
   return await Equipment.findById(equipmentId).populate([
     {
       path: "questions",
-      select: "_id question_text question_type required options allowMultipleSelection context",
+      select:
+        "_id question_text question_type required options allowMultipleSelection context image",
     },
     {
       path: "industry_id",
@@ -22,7 +23,12 @@ export const createInteraction = async (interaction) => {
   return response;
 };
 
-export const findAllInteractions = async (page, limit, equipment_id, user_email) => {
+export const findAllInteractions = async (
+  page,
+  limit,
+  equipment_id,
+  user_email
+) => {
   const skip = (page - 1) * limit;
   const query = {};
 
@@ -47,6 +53,6 @@ export const findAllInteractions = async (page, limit, equipment_id, user_email)
 
 export const findInteractionById = async (interactionId) => {
   const interaction = await Interaction.findById(interactionId);
-console.log("interaction", interaction);
+  console.log("interaction", interaction);
   return interaction;
 };

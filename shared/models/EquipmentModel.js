@@ -42,6 +42,16 @@ const EquipmentSchema = new mongoose.Schema(
       default: 3,
       min: [3, "Max Products must be at least 3"],
     },
+    endingMessage: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    tone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
   },
   { timestamps: true }
 );

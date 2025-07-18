@@ -11,6 +11,7 @@ import {
   resetEquipmentQuestions,
 } from "./services.js";
 import { questionDto, questionsDto } from "../../shared/dtos/questionDto.js";
+import { s3Uploader, deleteFromS3 } from "../../utils/s3Uploader.js";
 
 export const createQuestionController = catchAsync(async (req, res, next) => {
   const { equipment_id } = req.body;
@@ -20,7 +21,24 @@ export const createQuestionController = catchAsync(async (req, res, next) => {
     return next(createError(404, "Equipment not found"));
   }
 
-  const question = await createQuestion(req.body);
+  let imageUrl = req.body.image;
+  if (req.file) {
+    const uploadResult = await s3Uploader(req.file);
+    if (!uploadResult.success) {
+      return next(
+        createError(
+          500,
+          `Error uploading question image: ${uploadResult.error}`
+        )
+      );
+    }
+    imageUrl = uploadResult.url;
+  }
+
+  const question = await createQuestion({
+    ...req.body,
+    image: imageUrl,
+  });
 
   return res.status(201).json({
     success: true,
@@ -32,7 +50,9 @@ export const createQuestionController = catchAsync(async (req, res, next) => {
 export const getQuestionsController = catchAsync(async (req, res) => {
   const { equipmentId } = req.query;
 
-  const questions = equipmentId ? await findQuestionsByEquipment(equipmentId) : await findAllQuestions();
+  const questions = equipmentId
+    ? await findQuestionsByEquipment(equipmentId)
+    : await findAllQuestions();
 
   return res.status(200).json({
     success: true,
@@ -64,7 +84,26 @@ export const updateQuestionController = catchAsync(async (req, res, next) => {
   }
 
   if (question_type && question_type !== existingQuestion.question_type) {
-    return next(createError(400, "Question type cannot be changed after creation"));
+    return next(
+      createError(400, "Question type cannot be changed after creation")
+    );
+  }
+
+  if (req.file) {
+    // Remove old image from S3
+    if (existingQuestion.image) {
+      await deleteFromS3(existingQuestion.image);
+    }
+    const uploadResult = await s3Uploader(req.file);
+    if (!uploadResult.success) {
+      return next(
+        createError(
+          500,
+          `Error uploading question image: ${uploadResult.error}`
+        )
+      );
+    }
+    updateData.image = uploadResult.url;
   }
 
   const question = await findQuestionByIdAndUpdate(id, updateData);
@@ -80,6 +119,11 @@ export const deleteQuestionController = catchAsync(async (req, res, next) => {
   const question = await findQuestionByIdAndDelete(req.params.id);
   if (!question) {
     return next(createError(404, "Question not found"));
+  }
+
+  // Remove image from S3 if exists
+  if (question.image) {
+    await deleteFromS3(question.image);
   }
 
   return res.status(200).json({

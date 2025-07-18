@@ -16,7 +16,7 @@ export const chatHandlers = (io, socket) => {
         String(socket?.equipmentDetails?._id) != data.type
       ) {
         const equipmentDetails = await getLLMQuestionsController(data.type);
-        console.log("equipment details are", equipmentDetails);
+  
         socket.equipmentDetails = equipmentDetails;
       }
       const currentContextPrompt = getCurrentContextPrompt(
@@ -46,7 +46,9 @@ export const chatHandlers = (io, socket) => {
         socket.equipmentDetails.name,
         socket.equipmentDetails.questions,
         socket.equipmentDetails.trainingAiSnippets,
-        questionSpecificContext
+        questionSpecificContext,
+        socket.equipmentDetails.endingMessage || "",
+        socket.equipmentDetails.tone || ""
       );
       let llmResponse = await getLLMResponse({
         systemPrompt,
@@ -58,12 +60,12 @@ export const chatHandlers = (io, socket) => {
         let finalSystemPrompt = generateFinalLLMPrompt(
           socket?.equipmentDetails?.questions
         );
-       
+
         let finalLLMResponse = await getLLMResponse({
           systemPrompt: finalSystemPrompt,
           messages: data.messages,
         });
-      
+
         const parsedFinalLLMResponse = JSON.parse(finalLLMResponse);
         await addInteractionController(
           socket.equipmentDetails,
@@ -78,6 +80,7 @@ export const chatHandlers = (io, socket) => {
         parsedLLMResponse.content.recommendedProducts = recommendedProducts;
         llmResponse = JSON.stringify(parsedLLMResponse);
       }
+      console.log("Final LLM Response", llmResponse);
       socket.emit("receiveMessage", {
         role: "assistant",
         content: llmResponse,

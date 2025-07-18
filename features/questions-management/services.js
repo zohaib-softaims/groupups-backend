@@ -11,10 +11,12 @@ export const findQuestionById = async (id) => {
 };
 
 export const findQuestionsByEquipment = async (equipmentId) => {
-  const equipment = await Equipment.findById(equipmentId).select("questions").populate({
-    path: "questions",
-  });
-
+  const equipment = await Equipment.findById(equipmentId)
+    .select("questions")
+    .populate({
+      path: "questions",
+    });
+  console.log("Equipment questions:", equipment?.questions);
   return equipment?.questions || [];
 };
 
@@ -23,7 +25,10 @@ export const findAllQuestions = async () => {
 };
 
 export const findQuestionByIdAndUpdate = async (id, updateData) => {
-  return await Question.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
+  return await Question.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
 };
 
 export const findQuestionByIdAndDelete = async (id) => {

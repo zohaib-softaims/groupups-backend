@@ -1,24 +1,46 @@
 import { z } from "zod";
 import { validate } from "../../../middlewares/validate.js";
 
+// Helper to parse JSON fields from multipart/form-data
+const parseJsonField = (val, fallback) => {
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return fallback;
+    }
+  }
+  return val !== undefined ? val : fallback;
+};
+
+const getFirstString = (val) => (Array.isArray(val) ? val[0] : val);
+
 const baseQuestionSchema = z.object({
   equipment_id: z
-    .string({
-      required_error: "Equipment ID is required",
-    })
-    .length(24, {
+    .any()
+    .transform(getFirstString)
+    .refine((val) => typeof val === "string" && val.length === 24, {
       message: "Equipment ID must be a valid 24-character valid id",
     }),
 
-  question_type: z.enum(["open_ended", "multiple_choice", "statement", "file_upload"], {
-    required_error: "Question type is required",
-    invalid_type_error: "Question type must be one of: open_ended, multiple_choice, statement, file_upload",
-  }),
+  question_type: z.enum(
+    ["open_ended", "multiple_choice", "statement", "file_upload"],
+    {
+      required_error: "Question type is required",
+      invalid_type_error:
+        "Question type must be one of: open_ended, multiple_choice, statement, file_upload",
+    }
+  ),
 
   required: z
-    .boolean({
-      required_error: "Required field must be true or false",
-      invalid_type_error: "Required field must be a boolean",
+    .any()
+    .transform((val) => {
+      if (typeof val === "boolean") return val;
+      if (typeof val === "string") return val === "true";
+      return Boolean(val);
+    })
+    .refine((val) => typeof val === "boolean", {
+      message: "Required field must be true or false",
     })
     .default(true),
 
@@ -38,8 +60,16 @@ const baseQuestionSchema = z.object({
     .min(1, {
       message: "Question text cannot be empty",
     }),
+
   context: z
-    .array(z.string().trim())
+    .any()
+    .transform((val) => {
+      if (Array.isArray(val)) return val;
+      return parseJsonField(val, []);
+    })
+    .refine((val) => Array.isArray(val), {
+      message: "Context must be an array",
+    })
     .optional()
     .default([]),
 });
@@ -52,37 +82,53 @@ const multipleChoiceSchema = baseQuestionSchema.extend({
   question_type: z.literal("multiple_choice"),
 
   options: z
-    .array(
-      z.object({
-        text: z
-          .string({
-            required_error: "Option text is required",
-          })
-          .trim()
-          .min(1, "Option text cannot be empty"),
-      }),
-      {
-        required_error: "Options are required for multiple choice questions",
-      }
-    )
-    .min(2, "Multiple choice questions must have at least 2 options"),
+    .any()
+    .transform((val) => {
+      if (Array.isArray(val)) return val;
+      return parseJsonField(val, []);
+    })
+    .refine((val) => Array.isArray(val), {
+      message: "Options must be an array",
+    })
+    .refine((val) => val.length >= 2, {
+      message: "Multiple choice questions must have at least 2 options",
+    })
+    .refine(
+      (val) =>
+        val.every(
+          (opt) => typeof opt.text === "string" && opt.text.trim().length > 0
+        ),
+      { message: "Each option must have non-empty text" }
+    ),
 
-  allowMultipleSelection: z.boolean({
-    required_error: "allowMultipleSelection is required for multiple choice questions",
-    invalid_type_error: "allowMultipleSelection must be a boolean",
-  }),
+  allowMultipleSelection: z
+    .any()
+    .transform((val) => {
+      if (typeof val === "boolean") return val;
+      if (typeof val === "string") return val === "true";
+      return Boolean(val);
+    })
+    .refine((val) => typeof val === "boolean", {
+      message: "allowMultipleSelection must be a boolean",
+    }),
 });
 
 export const createQuestionValidator = (req, res, next) => {
   const { question_type } = req.body;
-  const schema = question_type === "multiple_choice" ? multipleChoiceSchema : simpleQuestionSchema;
+  const schema =
+    question_type === "multiple_choice"
+      ? multipleChoiceSchema
+      : simpleQuestionSchema;
 
   return validate(schema)(req, res, next);
 };
 
 export const updateQuestionValidator = (req, res, next) => {
   const { question_type } = req.body;
-  const schema = question_type === "multiple_choice" ? multipleChoiceSchema.partial() : simpleQuestionSchema.partial();
+  const schema =
+    question_type === "multiple_choice"
+      ? multipleChoiceSchema.partial()
+      : simpleQuestionSchema.partial();
 
   return validate(schema)(req, res, next);
 };

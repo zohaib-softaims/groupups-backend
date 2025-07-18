@@ -15,10 +15,17 @@ import {
   isEquipmentExistController,
   reorderIndustriesController,
   reorderEquipmentsController,
+  getEquipmentEndingMessageAndToneController,
 } from "./controllers.js";
 
-import { createIndustryValidator, updateIndustryValidator } from "./validators/industryValidator.js";
-import { createEquipmentValidator, updateEquipmentValidator } from "./validators/equipmentValidator.js";
+import {
+  createIndustryValidator,
+  updateIndustryValidator,
+} from "./validators/industryValidator.js";
+import {
+  createEquipmentValidator,
+  updateEquipmentValidator,
+} from "./validators/equipmentValidator.js";
 
 import { validate } from "../../middlewares/validate.js";
 import { authMiddleware } from "../../middlewares/authMiddleware.js";
@@ -45,8 +52,18 @@ router.patch(
   validate(updateIndustryValidator),
   updateIndustryController
 );
-router.delete("/industries/:id", authMiddleware, authorizeMiddleware("admin"), deleteIndustryController);
-router.get("/admin/industries", authMiddleware, authorizeMiddleware("admin"), getAdminIndustriesController);
+router.delete(
+  "/industries/:id",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  deleteIndustryController
+);
+router.get(
+  "/admin/industries",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  getAdminIndustriesController
+);
 router.get("/industries", getVisibleIndustriesController);
 router.post(
   "/reorder-industries",
@@ -70,8 +87,18 @@ router.patch(
   validate(updateEquipmentValidator),
   updateEquipmentController
 );
-router.delete("/equipments/:id", authMiddleware, authorizeMiddleware("admin"), deleteEquipmentController);
-router.get("/admin/equipments", authMiddleware, authorizeMiddleware("admin"), getAdminEquipmentsController);
+router.delete(
+  "/equipments/:id",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  deleteEquipmentController
+);
+router.get(
+  "/admin/equipments",
+  authMiddleware,
+  authorizeMiddleware("admin"),
+  getAdminEquipmentsController
+);
 router.get("/equipments", getVisibleEquipmentsController);
 router.get("/check-equipment", isEquipmentExistController);
 router.post(
@@ -79,6 +106,10 @@ router.post(
   authMiddleware,
   authorizeMiddleware("admin"),
   reorderEquipmentsController
+);
+router.get(
+  "/equipments/:id/ending-message-tone",
+  getEquipmentEndingMessageAndToneController
 );
 
 export default router;
